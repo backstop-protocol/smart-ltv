@@ -4,18 +4,18 @@ pragma solidity >=0.8.2 <0.9.0;
 contract Pythia {
 
     struct Data {
-        uint value;
-        uint lastUpdate;
+        uint224 value;
+        uint32 lastUpdate;
     }
 
     mapping(address => mapping(address => mapping(bytes32 => Data))) data;
 
 
-    function set(address asset, bytes32 key, uint value, uint updateTime) public {
+    function set(address asset, bytes32 key, uint224 value, uint32 updateTime) public {
         data[msg.sender][asset][key] = Data(value, updateTime);
     }
 
-    function multiSet(address[] calldata assets, bytes32[] calldata keys, uint[] calldata values, uint[] calldata updateTimes) external {
+    function multiSet(address[] calldata assets, bytes32[] calldata keys, uint224[] calldata values, uint32[] calldata updateTimes) external {
         require(assets.length == keys.length, "invalid input length");
 
         for(uint i = 0 ; i < assets.length; i++) {
