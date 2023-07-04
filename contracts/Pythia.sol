@@ -33,7 +33,7 @@ contract Pythia {
 
         results = new Data[](keys.length);
         for(uint i = 0 ; i < results.length ; i++) {
-            results[i] = get(assets[i], relayers[i], keys[i]);
+            results[i] = get(relayers[i], assets[i], keys[i]);
         }
     }
 }
