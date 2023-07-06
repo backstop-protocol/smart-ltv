@@ -20,7 +20,7 @@ contract KeyEncoder {
         VolatilityMode mode,
         uint period
     )
-        external
+        public
         pure
         returns(bytes32) {
 
@@ -34,7 +34,7 @@ contract KeyEncoder {
         uint slippage,
         uint period
     )
-        external
+        public
         pure
         returns(bytes32) {
 

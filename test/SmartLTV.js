@@ -25,7 +25,8 @@ describe("Smart LTV", function () {
     const pythia = await Pythia.deploy();
     const keyEncoder = await KeyEncoder.deploy();
 
-    const smartLTV = await SmartLTV.deploy(pythia.target, keyEncoder.target, relayer.address);
+    //console.log(pythia.target, relayer.address)
+    const smartLTV = await SmartLTV.deploy(/*pythia.target, relayer.address*/);
 
 
     return {smartLTV, pythia, keyEncoder, relayer};

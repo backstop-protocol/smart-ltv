@@ -5,35 +5,47 @@ import "./Pythia.sol";
 import "./KeyEncoder.sol";
 import "./RiskyMath.sol";
 
-contract SmartLTV is RiskyMath, KeyEncoder {
-    Pythia immutable PYTHIA = Pythia(0x5FbDB2315678afecb367f032d93F642f64180aa3);
-    address immutable TRUSTED_RELAYER = address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8);
+contract SmartLTV is RiskyMath {
+    Pythia immutable pythia;
+    KeyEncoder immutable keyEncoder;
+    address immutable trustedRelayer;
 
-    // fixed parameters, set according to risk preference
     uint constant CLF = 7e15;
     uint constant TIME_PERIOD = 1 days * 365;
     KeyEncoder.VolatilityMode VOLATILITY_MODE = KeyEncoder.VolatilityMode.Standard;
     KeyEncoder.LiquiditySource LIQUIDITY_SOURCE = KeyEncoder.LiquiditySource.All;
 
-    // TODO - read from actual lending market
-    address constant COLLATERAL_ASSET = address(0xDAFEA492D9c6733ae3d56b7Ed1ADB60692c98Bc5);
-    address constant DEBT_ASSET = address(0xe688b84b23f322a994A53dbF8E15FA82CDB71127);
-    uint constant DEBT_CELING = 700_000 * 1e18;
-    uint constant LIQUIDATION_INCENTIVE = 5e16;
+    constructor(Pythia _pythia, KeyEncoder _keyEncoder, address _trustedRelayer) {
+        pythia = _pythia;
+        keyEncoder = _keyEncoder;
+        trustedRelayer = _trustedRelayer;
+    }
+
+    function getDebtCeling(address debtAsset) public pure returns(uint) {
+        // TODO - read from actual lending platform
+        debtAsset;
+        return 700_000 * 1e18;
+    }
+
+    function getLiquidationIncentive(address collateralAsset) public pure returns(uint) {
+        // TODO - read from actual lending platform
+        collateralAsset;
+        return 5e16;
+    }
 
     function getVolatility(address collateralAsset, address debtAsset) public view returns(uint value) {
-        bytes32 key = encodeVolatilityKey(collateralAsset, debtAsset, VOLATILITY_MODE, TIME_PERIOD);
+        bytes32 key = keyEncoder.encodeVolatilityKey(collateralAsset, debtAsset, VOLATILITY_MODE, TIME_PERIOD);
 
-        Pythia.Data memory data = PYTHIA.get(TRUSTED_RELAYER, collateralAsset, key);
+        Pythia.Data memory data = pythia.get(trustedRelayer, collateralAsset, key);
         require(data.lastUpdate >= block.timestamp - 1 days, "stale data");
 
         value = data.value;
     }
 
     function getLiquidity(address collateralAsset, address debtAsset, uint liquiditationIncentive) public view returns(uint value) {
-        bytes32 key = encodeLiquidityKey(collateralAsset, debtAsset, LIQUIDITY_SOURCE, liquiditationIncentive, TIME_PERIOD);
+        bytes32 key = keyEncoder.encodeLiquidityKey(collateralAsset, debtAsset, LIQUIDITY_SOURCE, liquiditationIncentive, TIME_PERIOD);
 
-        Pythia.Data memory data = PYTHIA.get(TRUSTED_RELAYER, collateralAsset, key);
+        Pythia.Data memory data = pythia.get(trustedRelayer, collateralAsset, key);
         require(data.lastUpdate >= block.timestamp - 1 days, "stale data");
 
         value = data.value;        
@@ -41,9 +53,9 @@ contract SmartLTV is RiskyMath, KeyEncoder {
 
     function ltv(address collateralAsset, address debtAsset) public view returns(uint) {
         uint sigma = getVolatility(collateralAsset, debtAsset);
-        uint beta = LIQUIDATION_INCENTIVE;
+        uint beta = getLiquidationIncentive(collateralAsset);
         uint l = getLiquidity(collateralAsset, debtAsset, beta);
-        uint d = DEBT_CELING;
+        uint d = getDebtCeling(debtAsset);
 
         // LTV  = e ^ (-c * sigma / sqrt(l/d)) - beta
         uint cTimesSigma = CLF * sigma / 1e18;
@@ -53,10 +65,6 @@ contract SmartLTV is RiskyMath, KeyEncoder {
         uint expResult = generalExp(mantissa, 59);
 
         return (1e18 * (1 << 59)) / expResult - beta;
-    }
-
-    function recommendedLTV() public view returns(uint) {
-        return ltv(COLLATERAL_ASSET, DEBT_ASSET);
-    }
+    }    
 }
 
