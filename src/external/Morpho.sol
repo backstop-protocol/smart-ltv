@@ -2,7 +2,7 @@
 pragma solidity >=0.8.2 <0.9.0;
 
 /**
- * All morphos needed interface are here to simplify integration
+ * All morphos needed interface are here to simplify integration without importing full interfaces
  */
 
 struct MarketAllocation {
