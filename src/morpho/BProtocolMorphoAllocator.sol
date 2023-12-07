@@ -3,9 +3,10 @@ pragma solidity >=0.8.2 <0.9.0;
 
 import {RiskData, Signature} from "../interfaces/RiskData.sol";
 import {SmartLTV} from "../core/SmartLTV.sol";
-import {IMetaMorpho, MarketAllocation, Id, MarketParams} from "../external/IMetaMorpho.sol";
+import {IMetaMorpho, MarketAllocation, Id, MarketParams, IMorpho} from "../external/Morpho.sol";
 import {RiskyMath} from "../lib/RiskyMath.sol";
-import {MorphoLib} from "../lib/MorphoLib.sol";
+import {MorphoLib} from "../external/Morpho.sol";
+import {ErrorLib} from "../lib/ErrorLib.sol";
 
 /*  
 USDC/sDAI
@@ -27,14 +28,10 @@ marketid: 0xbc6d1789e6ba66e5cd277af475c5ed77fcf8b084347809d9d92e400ebacbdd10
 */
 
 contract BProtocolMorphoAllocator {
-  using MorphoLib for MarketParams;
-
   SmartLTV immutable SMART_LTV;
   address immutable TRUSTED_RELAYER;
   address immutable METAMORPHO_VAULT;
   uint256 immutable MIN_CLF = 3;
-
-  error INVALID_NUMBER_OF_RISK_DATA(uint256 a);
 
   constructor(SmartLTV smartLTV, address relayer, address morphoVault) {
     SMART_LTV = smartLTV;
@@ -48,13 +45,18 @@ contract BProtocolMorphoAllocator {
     Signature[] calldata signatures
   ) external {
     if (allocations.length != riskDatas.length) {
-      revert INVALID_NUMBER_OF_RISK_DATA(250);
+      revert ErrorLib.INVALID_RISK_DATA_COUNT(
+        allocations.length,
+        riskDatas.length
+      );
     }
 
-    require(
-      riskDatas.length == signatures.length,
-      "Invalid number of signatures"
-    );
+    if (riskDatas.length != signatures.length) {
+      revert ErrorLib.INVALID_SIGNATURE_COUNT(
+        riskDatas.length,
+        signatures.length
+      );
+    }
 
     for (uint256 i = 0; i < allocations.length; i++) {
       _checkAllocationRisk(allocations[i], riskDatas[i], signatures[i]);
@@ -69,17 +71,8 @@ contract BProtocolMorphoAllocator {
     RiskData memory riskData,
     Signature memory signature
   ) private view {
-    require(
-      allocation.marketParams.collateralToken == riskData.collateralAsset,
-      "Allocation collateral token != riskData.collateralAsset"
-    );
-    require(
-      allocation.marketParams.loanToken == riskData.debtAsset,
-      "allocation.loanToken != riskData.debtAsset"
-    );
-
     // get market config from the vault
-    Id marketId = allocation.marketParams.id();
+    Id marketId = MorphoLib.id(allocation.marketParams);
     (uint184 cap, , ) = IMetaMorpho(METAMORPHO_VAULT).config(marketId);
 
     uint256 d = cap; // supplyCap
@@ -98,9 +91,11 @@ contract BProtocolMorphoAllocator {
     );
 
     // check if the current ltv is lower or equal to the recommended ltv
-    require(
-      recommendedLtv >= allocation.marketParams.lltv,
-      "recommended ltv is lower than current lltv"
-    );
+    if (allocation.marketParams.lltv > recommendedLtv) {
+      revert ErrorLib.LTV_TOO_HIGH(
+        allocation.marketParams.lltv,
+        recommendedLtv
+      );
+    }
   }
 }

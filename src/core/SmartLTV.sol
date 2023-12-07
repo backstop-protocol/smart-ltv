@@ -4,6 +4,7 @@ pragma solidity >=0.8.2 <0.9.0;
 import {Pythia} from "./Pythia.sol";
 import {RiskData} from "../interfaces/RiskData.sol";
 import {RiskyMath} from "../lib/RiskyMath.sol";
+import {ErrorLib} from "../lib/ErrorLib.sol";
 
 contract SmartLTV {
   Pythia immutable PYTHIA;
@@ -29,23 +30,33 @@ contract SmartLTV {
     address signer = PYTHIA.getSigner(riskData, v, r, s);
 
     // invalid signature
-    // TODO - use error objects, like the cool kids do
-    require(signer == TRUSTED_RELAYER, "invalid signer");
+    if (signer != TRUSTED_RELAYER) {
+      revert ErrorLib.INVALID_SIGNER(signer, TRUSTED_RELAYER);
+    }
 
     // timeout
-    require(riskData.lastUpdate + 1 days >= block.timestamp, "timeout");
+    if (riskData.lastUpdate < block.timestamp - 1 days) {
+      revert ErrorLib.TIMEOUT();
+    }
 
     // chain id
-    require(riskData.chainId == block.chainid, "invalid chainId");
+
+    if (riskData.chainId != block.chainid) {
+      revert ErrorLib.WRONG_CHAINID(riskData.chainId, block.chainid);
+    }
 
     // check collateral asset is the same
-    require(
-      riskData.collateralAsset == collateralAsset,
-      "wrong collateral asset"
-    );
+    if (riskData.collateralAsset != collateralAsset) {
+      revert ErrorLib.COLLATERAL_MISMATCH(
+        riskData.collateralAsset,
+        collateralAsset
+      );
+    }
 
     // check debt asset is the same
-    require(riskData.debtAsset == debtAsset, "wrong debt asset");
+    if (riskData.debtAsset != debtAsset) {
+      revert ErrorLib.DEBT_MISMATCH(riskData.debtAsset, debtAsset);
+    }
 
     uint sigma = riskData.volatility;
     uint l = riskData.liquidity;

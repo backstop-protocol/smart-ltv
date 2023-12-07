@@ -8,7 +8,9 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "forge test",
+    "test-goerli": "forge test --match-path './test/integration/**' --fork-url $GOERLI_RPC_URL -vvv",
+    "build": "forge build",
     "prettier-format": "prettier --config .prettierrc \"./src/**/*.sol\" --write",
     "prettier-watch": "onchange \"src/**/*.sol\" -- prettier --write {{changed}}"
   },
