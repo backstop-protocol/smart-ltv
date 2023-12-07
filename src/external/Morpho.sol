@@ -28,6 +28,8 @@ interface IMetaMorpho {
   ) external view returns (uint184 cap, bool enabled, uint64 removableAt);
 
   function reallocate(MarketAllocation[] calldata allocations) external;
+
+  function MORPHO() external view returns (IMorpho);
 }
 
 interface IMorpho {
