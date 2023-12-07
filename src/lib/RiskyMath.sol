@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.2 <0.9.0;
 
+/// @title RiskyMath Library
+/// @author bprotocol
+/// @notice Provides advanced mathematical functions to assist in risk calculations for DeFi applications.
 library RiskyMath {
+  /// @notice Computes an exponential function with base 'e' for risk calculations.
+  /// @param _x The exponent to use in the calculation.
+  /// @param _precision The precision for the calculation.
+  /// @return The result of the exponential function.
   function generalExp(
     uint256 _x,
     uint8 _precision
@@ -78,6 +85,10 @@ library RiskyMath {
     return res / 0x688589cc0e9505e2f2fee5580000000 + _x + (1 << _precision);
   }
 
+  /// @notice Calculates the square root of a given number.
+  /// @dev Implements an efficient algorithm for square root calculation, such as the Babylonian method or Bit Shifting method.
+  /// @param x The number to calculate the square root of.
+  /// @return y The calculated square root.
   function sqrt(uint256 x) internal pure returns (uint256 y) {
     uint256 z = (x + 1) / 2;
     y = x;

@@ -28,24 +28,28 @@ marketid: 0xbc6d1789e6ba66e5cd277af475c5ed77fcf8b084347809d9d92e400ebacbdd10
 */
 
 /// @title BProtocol Morpho Allocator Contract
+/// @author bprotocol, la-tribu.xyz
 /// @notice This contract is responsible for reallocating market allocations while checking risk data before reallocating.
 ///         It interacts with the SmartLTV and a MetaMorpho Vault to manage these allocations.
 ///         It needs to have the Allocator role in the MetaMorpho vault
 /// @dev The contract uses immutable state variables for SmartLTV, trusted relayer, and MetaMorpho Vault addresses.
 ///      It includes functionality to check allocation risks and perform reallocation based on these assessments.
 contract BProtocolMorphoAllocator {
+  /// @notice The SmartLTV contract used for loan-to-value calculations
   SmartLTV immutable SMART_LTV;
-  address immutable TRUSTED_RELAYER;
+
+  /// @notice The MetaMorpho Vault contract address for market allocations
   address immutable METAMORPHO_VAULT;
+
+  /// @notice A predefined constant representing the minimum collateralization liquidation factor
   uint256 immutable MIN_CLF = 3;
 
-  constructor(SmartLTV smartLTV, address relayer, address morphoVault) {
+  constructor(SmartLTV smartLTV, address morphoVault) {
     SMART_LTV = smartLTV;
-    TRUSTED_RELAYER = relayer;
     METAMORPHO_VAULT = morphoVault;
   }
 
-  // @notice Checks and reallocates market allocations based on the provided risk data and signatures.
+  /// @notice Checks and reallocates market allocations based on the provided risk data and signatures.
   /// @dev Performs checks on array lengths for allocations, risk data, and signatures, and then
   ///      calls `_checkAllocationRisk` for each allocation. Finally, it calls `reallocate` on the MetaMorpho Vault.
   /// @param allocations Array of market allocations.
