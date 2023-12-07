@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.2 <0.9.0;
 
+import {RiskData} from "../interfaces/RiskData.sol";
+
 contract Pythia {
   struct EIP712Domain {
     string name;
@@ -13,21 +15,6 @@ contract Pythia {
     keccak256(
       "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
     );
-
-  struct Signature {
-    uint8 v;
-    bytes32 r;
-    bytes32 s;
-  }
-
-  struct RiskData {
-    address collateralAsset;
-    address debtAsset;
-    uint256 liquidity;
-    uint256 volatility;
-    uint256 lastUpdate;
-    uint256 chainId;
-  }
 
   bytes32 public constant RISKDATA_TYPEHASH =
     keccak256(

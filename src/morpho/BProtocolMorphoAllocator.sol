@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.2 <0.9.0;
 
-import {Pythia} from "../core/Pythia.sol";
+import {RiskData, Signature} from "../interfaces/RiskData.sol";
 import {SmartLTV} from "../core/SmartLTV.sol";
 import {IMetaMorpho, MarketAllocation, Id, MarketParams} from "../external/IMetaMorpho.sol";
 import {RiskyMath} from "../lib/RiskyMath.sol";
@@ -44,8 +44,8 @@ contract BProtocolMorphoAllocator {
 
   function checkAndReallocate(
     MarketAllocation[] calldata allocations,
-    Pythia.RiskData[] calldata riskDatas,
-    Pythia.Signature[] calldata signatures
+    RiskData[] calldata riskDatas,
+    Signature[] calldata signatures
   ) external {
     if (allocations.length != riskDatas.length) {
       revert INVALID_NUMBER_OF_RISK_DATA(250);
@@ -66,8 +66,8 @@ contract BProtocolMorphoAllocator {
 
   function _checkAllocationRisk(
     MarketAllocation memory allocation,
-    Pythia.RiskData memory riskData,
-    Pythia.Signature memory signature
+    RiskData memory riskData,
+    Signature memory signature
   ) private view {
     require(
       allocation.marketParams.collateralToken == riskData.collateralAsset,

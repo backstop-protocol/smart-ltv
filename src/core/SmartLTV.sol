@@ -2,6 +2,7 @@
 pragma solidity >=0.8.2 <0.9.0;
 
 import {Pythia} from "./Pythia.sol";
+import {RiskData} from "../interfaces/RiskData.sol";
 import {RiskyMath} from "../lib/RiskyMath.sol";
 
 contract SmartLTV {
@@ -19,7 +20,7 @@ contract SmartLTV {
     uint d,
     uint beta,
     uint minClf,
-    Pythia.RiskData memory riskData,
+    RiskData memory riskData,
     uint8 v,
     bytes32 r,
     bytes32 s
