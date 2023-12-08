@@ -18,9 +18,7 @@ contract Pythia {
 
   /// @notice Type hash for the EIP712 domain, used in constructing the domain separator.
   bytes32 public constant EIP712DOMAIN_TYPEHASH =
-    keccak256(
-      "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-    );
+    keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
   /// @notice Type hash for RiskData, used in the EIP712 typed data signing process.
   bytes32 public constant RISKDATA_TYPEHASH =
@@ -39,21 +37,14 @@ contract Pythia {
     chainId = block.chainid;
 
     DOMAIN_SEPARATOR = hashStruct(
-      EIP712Domain({
-        name: "SPythia",
-        version: "0.0.1",
-        chainId: chainId,
-        verifyingContract: address(this)
-      })
+      EIP712Domain({name: "SPythia", version: "0.0.1", chainId: chainId, verifyingContract: address(this)})
     );
   }
 
   /// @notice Hashes an EIP712Domain struct using the EIP712 domain type hash.
   /// @param eip712Domain The EIP712 domain struct to be hashed.
   /// @return The keccak256 hash of the encoded EIP712Domain struct.
-  function hashStruct(
-    EIP712Domain memory eip712Domain
-  ) public pure returns (bytes32) {
+  function hashStruct(EIP712Domain memory eip712Domain) public pure returns (bytes32) {
     return
       keccak256(
         abi.encode(
@@ -91,15 +82,8 @@ contract Pythia {
   /// @param r Half of the ECDSA signature pair.
   /// @param s Half of the ECDSA signature pair.
   /// @return The address of the signer who signed the provided RiskData.
-  function getSigner(
-    RiskData memory data,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) public view returns (address) {
-    bytes32 digest = keccak256(
-      abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, hashStruct(data))
-    );
+  function getSigner(RiskData memory data, uint8 v, bytes32 r, bytes32 s) public view returns (address) {
+    bytes32 digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, hashStruct(data)));
     return ecrecover(digest, v, r, s);
   }
 }

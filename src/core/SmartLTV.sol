@@ -75,10 +75,7 @@ contract SmartLTV {
 
     // check collateral asset is the same
     if (riskData.collateralAsset != collateralAsset) {
-      revert ErrorLib.COLLATERAL_MISMATCH(
-        riskData.collateralAsset,
-        collateralAsset
-      );
+      revert ErrorLib.COLLATERAL_MISMATCH(riskData.collateralAsset, collateralAsset);
     }
 
     // check debt asset is the same

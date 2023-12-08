@@ -9,10 +9,7 @@ library RiskyMath {
   /// @param _x The exponent to use in the calculation.
   /// @param _precision The precision for the calculation.
   /// @return The result of the exponential function.
-  function generalExp(
-    uint256 _x,
-    uint8 _precision
-  ) internal pure returns (uint256) {
+  function generalExp(uint256 _x, uint8 _precision) internal pure returns (uint256) {
     uint256 xi = _x;
     uint256 res = 0;
 

@@ -39,14 +39,14 @@ contract BProtocolMorphoAllocator {
   SmartLTV immutable SMART_LTV;
 
   /// @notice The MetaMorpho Vault contract address for market allocations
-  address immutable METAMORPHO_VAULT;
+  IMetaMorpho immutable METAMORPHO_VAULT;
 
   /// @notice A predefined constant representing the minimum collateralization liquidation factor
   uint256 immutable MIN_CLF = 3;
 
-  constructor(SmartLTV smartLTV, address morphoVault) {
+  constructor(SmartLTV smartLTV, address morphoVaultAddress) {
     SMART_LTV = smartLTV;
-    METAMORPHO_VAULT = morphoVault;
+    METAMORPHO_VAULT = IMetaMorpho(morphoVaultAddress);
   }
 
   /// @notice Checks and reallocates market allocations based on the provided risk data and signatures.
@@ -63,56 +63,85 @@ contract BProtocolMorphoAllocator {
     Signature[] calldata signatures
   ) external {
     if (allocations.length != riskDatas.length) {
-      revert ErrorLib.INVALID_RISK_DATA_COUNT(
-        allocations.length,
-        riskDatas.length
-      );
+      revert ErrorLib.INVALID_RISK_DATA_COUNT(allocations.length, riskDatas.length);
     }
 
     if (riskDatas.length != signatures.length) {
-      revert ErrorLib.INVALID_SIGNATURE_COUNT(
-        riskDatas.length,
-        signatures.length
-      );
+      revert ErrorLib.INVALID_SIGNATURE_COUNT(riskDatas.length, signatures.length);
     }
 
     for (uint256 i = 0; i < allocations.length; i++) {
-      _checkAllocationRisk(allocations[i], riskDatas[i], signatures[i]);
+      MarketAllocation memory allocation = allocations[i];
+
+      // find the market Id for this allocation
+      Id marketId = MorphoLib.id(allocation.marketParams);
+
+      // get the market infos from morpho blue contract
+      (uint128 totalSupplyAssets, uint128 totalSupplyShares, , , , ) = METAMORPHO_VAULT.MORPHO().market(marketId);
+
+      if (!_isWithdraw(marketId, allocation.assets, totalSupplyAssets, totalSupplyShares)) {
+        // only check risk if not withdraw
+        // because we want to allow withdraw for a risky market
+        uint256 currentCap = _getCurrentCap(marketId, totalSupplyAssets);
+        _checkAllocationRisk(currentCap, allocation.marketParams.lltv, riskDatas[i], signatures[i]);
+      }
     }
 
     // call reallocate
-    IMetaMorpho(METAMORPHO_VAULT).reallocate(allocations);
+    METAMORPHO_VAULT.reallocate(allocations);
+  }
+
+  function _isWithdraw(
+    Id marketId,
+    uint256 allocationAssets,
+    uint128 totalSupplyAsset,
+    uint128 totalSupplyShares
+  ) internal view returns (bool isWithdraw) {
+    // get the vault supply for the market
+    uint256 currentVaultMarketSupply = _getVaultMarketSupply(marketId, totalSupplyAsset, totalSupplyShares);
+
+    // if the targeted allocation (allocationAssets) is less than the current vault market supply
+    // it means we will withdraw liquidity from this market
+    isWithdraw = allocationAssets < currentVaultMarketSupply;
+  }
+
+  function _getVaultMarketSupply(
+    Id marketId,
+    uint128 totalSupplyAssets,
+    uint128 totalSupplyShares
+  ) internal view returns (uint256) {
+    (uint256 supplyShare, , ) = METAMORPHO_VAULT.MORPHO().position(marketId, address(METAMORPHO_VAULT));
+
+    uint256 currentVaultMarketSupply = MorphoLib.toAssetsDown(supplyShare, totalSupplyAssets, totalSupplyShares);
+    return currentVaultMarketSupply;
+  }
+
+  function _getCurrentCap(Id marketId, uint256 totalSupplyAsset) private view returns (uint256 d) {
+    (uint184 cap, , ) = METAMORPHO_VAULT.config(marketId);
+    // the cap d is the max between vault cap and total supply asset of the morpho market
+    d = cap >= totalSupplyAsset ? cap : totalSupplyAsset; // supplyCap
   }
 
   /// @notice Checks the allocation risk based on market configuration and provided risk data.
   /// @dev Retrieves market configuration and current supply from the vault to calculate the recommended LTV.
   ///      It then compares the current market LTV with the recommended LTV and reverts if the current LTV is higher.
-  /// @param allocation The market allocation data, including market parameters.
+  /// @param currentCap The market current cap, computed as the max between vault cap and current market supply.
+  /// @param allocationLLTV The allocation lltv, which will be check against the SmartLTV recommendation.
   /// @param riskData Risk data associated with the market allocation, including collateral and debt assets.
   /// @param signature The signature used for verification in LTV calculation.
   /// @custom:revert LTV_TOO_HIGH If the current LTV (Loan-to-Value) is higher than the recommended LTV by the SmartLTV contract.
   function _checkAllocationRisk(
-    MarketAllocation memory allocation,
+    uint256 currentCap,
+    uint256 allocationLLTV,
     RiskData memory riskData,
     Signature memory signature
   ) private view {
-    // get market config from the vault to get the cap
-    Id marketId = MorphoLib.id(allocation.marketParams);
-    (uint184 cap, , ) = IMetaMorpho(METAMORPHO_VAULT).config(marketId);
-
-    // get the market current supply
-    (uint128 totalSupplyAsset, , , , , ) = IMetaMorpho(METAMORPHO_VAULT)
-      .MORPHO()
-      .market(marketId);
-
-    // d is the max between vault cap and total supply asset of the morpho market
-    uint256 d = cap >= totalSupplyAsset ? cap : totalSupplyAsset; // supplyCap
     uint256 beta = 15487; // TODO REAL liquidation bonus
 
     uint recommendedLtv = SMART_LTV.ltv(
       riskData.collateralAsset,
       riskData.debtAsset,
-      d,
+      currentCap,
       beta,
       MIN_CLF,
       riskData,
@@ -122,11 +151,8 @@ contract BProtocolMorphoAllocator {
     );
 
     // check if the current ltv is lower or equal to the recommended ltv
-    if (allocation.marketParams.lltv > recommendedLtv) {
-      revert ErrorLib.LTV_TOO_HIGH(
-        allocation.marketParams.lltv,
-        recommendedLtv
-      );
+    if (allocationLLTV > recommendedLtv) {
+      revert ErrorLib.LTV_TOO_HIGH(allocationLLTV, recommendedLtv);
     }
   }
 }
