@@ -84,6 +84,8 @@ library MorphoLib {
 }
 
 uint256 constant WAD = 1e18;
+uint256 constant MAX_LIQUIDATION_INCENTIVE_FACTOR = 0.15e18;
+uint256 constant LIQUIDATION_CURSOR = 0.3e18;
 
 /// @title MathLib
 /// @author Morpho Labs

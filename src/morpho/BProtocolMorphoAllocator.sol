@@ -3,7 +3,7 @@ pragma solidity >=0.8.2 <0.9.0;
 
 import {RiskData, Signature} from "../interfaces/RiskData.sol";
 import {SmartLTV} from "../core/SmartLTV.sol";
-import {IMetaMorpho, MarketAllocation, Id, MarketParams, IMorpho} from "../external/Morpho.sol";
+import {IMetaMorpho, MarketAllocation, Id, MarketParams, IMorpho, MathLib, WAD, MAX_LIQUIDATION_INCENTIVE_FACTOR, LIQUIDATION_CURSOR} from "../external/Morpho.sol";
 import {RiskyMath} from "../lib/RiskyMath.sol";
 import {MorphoLib} from "../external/Morpho.sol";
 import {ErrorLib} from "../lib/ErrorLib.sol";
@@ -35,6 +35,8 @@ marketid: 0xbc6d1789e6ba66e5cd277af475c5ed77fcf8b084347809d9d92e400ebacbdd10
 /// @dev The contract uses immutable state variables for SmartLTV, trusted relayer, and MetaMorpho Vault addresses.
 ///      It includes functionality to check allocation risks and perform reallocation based on these assessments.
 contract BProtocolMorphoAllocator {
+  using MathLib for uint256;
+
   /// @notice The SmartLTV contract used for loan-to-value calculations
   SmartLTV immutable SMART_LTV;
 
@@ -126,17 +128,17 @@ contract BProtocolMorphoAllocator {
   /// @dev Retrieves market configuration and current supply from the vault to calculate the recommended LTV.
   ///      It then compares the current market LTV with the recommended LTV and reverts if the current LTV is higher.
   /// @param currentCap The market current cap, computed as the max between vault cap and current market supply.
-  /// @param allocationLLTV The allocation lltv, which will be check against the SmartLTV recommendation.
+  /// @param marketLLTV The market lltv, which will be checked against the SmartLTV recommendation.
   /// @param riskData Risk data associated with the market allocation, including collateral and debt assets.
   /// @param signature The signature used for verification in LTV calculation.
   /// @custom:revert LTV_TOO_HIGH If the current LTV (Loan-to-Value) is higher than the recommended LTV by the SmartLTV contract.
   function _checkAllocationRisk(
     uint256 currentCap,
-    uint256 allocationLLTV,
+    uint256 marketLLTV,
     RiskData memory riskData,
     Signature memory signature
   ) private view {
-    uint256 beta = 15487; // TODO REAL liquidation bonus
+    uint256 beta = _getLiquidationIncentives(marketLLTV);
 
     uint recommendedLtv = SMART_LTV.ltv(
       riskData.collateralAsset,
@@ -151,8 +153,20 @@ contract BProtocolMorphoAllocator {
     );
 
     // check if the current ltv is lower or equal to the recommended ltv
-    if (allocationLLTV > recommendedLtv) {
-      revert ErrorLib.LTV_TOO_HIGH(allocationLLTV, recommendedLtv);
+    if (marketLLTV > recommendedLtv) {
+      revert ErrorLib.LTV_TOO_HIGH(marketLLTV, recommendedLtv);
+    }
+  }
+
+  function _getLiquidationIncentives(uint256 marketParamsLLTV) private pure returns (uint256) {
+    // The liquidation incentive factor is min(maxLiquidationIncentiveFactor, 1/(1 - cursor*(1 - lltv))).
+    uint256 computedLiquidationIncentives = WAD.wDivDown(WAD - LIQUIDATION_CURSOR.wMulDown(WAD - marketParamsLLTV)) -
+      WAD;
+
+    if (MAX_LIQUIDATION_INCENTIVE_FACTOR < computedLiquidationIncentives) {
+      return MAX_LIQUIDATION_INCENTIVE_FACTOR;
+    } else {
+      return computedLiquidationIncentives;
     }
   }
 }
