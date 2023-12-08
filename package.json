@@ -11,8 +11,8 @@
     "test": "forge test",
     "test-goerli": "forge test --match-path './test/integration/**' --fork-url $GOERLI_RPC_URL -vvv",
     "build": "forge build",
-    "prettier-format": "prettier --config .prettierrc \"./src/**/*.sol\" --write",
-    "prettier-watch": "onchange \"src/**/*.sol\" -- prettier --write {{changed}}"
+    "prettier-format": "prettier --config .prettierrc \"./(src|test)/**/*.sol\" --write",
+    "prettier-watch": "onchange \"(src|test)/**/*.sol\" -- prettier --write {{changed}}"
   },
   "author": "",
   "license": "ISC",

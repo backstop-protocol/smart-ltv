@@ -36,23 +36,14 @@ contract Pythia {
   constructor() {
     chainId = block.chainid;
 
-    DOMAIN_SEPARATOR = hashStruct(
-      EIP712Domain({name: "SPythia", version: "0.0.1", chainId: chainId, verifyingContract: address(this)})
-    );
-  }
-
-  /// @notice Hashes an EIP712Domain struct using the EIP712 domain type hash.
-  /// @param eip712Domain The EIP712 domain struct to be hashed.
-  /// @return The keccak256 hash of the encoded EIP712Domain struct.
-  function hashStruct(EIP712Domain memory eip712Domain) public pure returns (bytes32) {
-    return
-      keccak256(
+    EIP712Domain memory domain = EIP712Domain({name: "SPythia", version: "0.0.1", chainId: chainId, verifyingContract: address(this)});
+    DOMAIN_SEPARATOR = keccak256(
         abi.encode(
           EIP712DOMAIN_TYPEHASH,
-          keccak256(bytes(eip712Domain.name)),
-          keccak256(bytes(eip712Domain.version)),
-          eip712Domain.chainId,
-          eip712Domain.verifyingContract
+          keccak256(bytes(domain.name)),
+          keccak256(bytes(domain.version)),
+          domain.chainId,
+          domain.verifyingContract
         )
       );
   }
