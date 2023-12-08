@@ -2,7 +2,8 @@
 pragma solidity ^0.8.2;
 
 import "ds-test/test.sol";
-import "src/core/Pythia.sol";
+import {Pythia} from "src/core/Pythia.sol";
+import {RiskData} from "src/interfaces/RiskData.sol";
 
 contract PythiaTest is DSTest {
   Pythia pythia;
@@ -12,7 +13,39 @@ contract PythiaTest is DSTest {
   }
 
   function testDomainSeparator() public {
-    bytes32 expected = "0x030a1e878cd53df6af29a4bc520fde7936a8b4ff6a735f7da53b528cfdc6e207";
+    bytes32 expected = 0x030a1e878cd53df6af29a4bc520fde7936a8b4ff6a735f7da53b528cfdc6e207;
     assertEq(pythia.DOMAIN_SEPARATOR(), expected);
+  }
+
+  function testHashStruct(
+    address collateralAsset,
+    address debtAsset,
+    uint256 liquidity,
+    uint256 volatility,
+    uint256 lastUpdate,
+    uint256 chainId
+  ) public {
+    RiskData memory data = RiskData({
+      collateralAsset: collateralAsset,
+      debtAsset: debtAsset,
+      liquidity: liquidity,
+      volatility: volatility,
+      lastUpdate: lastUpdate,
+      chainId: chainId
+    });
+
+    bytes32 hashedStruct = keccak256(
+      abi.encode(
+        pythia.RISKDATA_TYPEHASH(),
+        data.collateralAsset,
+        data.debtAsset,
+        data.liquidity,
+        data.volatility,
+        data.lastUpdate,
+        data.chainId
+      )
+    );
+
+    assertEq(pythia.hashStruct(data), hashedStruct);
   }
 }
