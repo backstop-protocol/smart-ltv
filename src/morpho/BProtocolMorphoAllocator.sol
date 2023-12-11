@@ -44,7 +44,7 @@ contract BProtocolMorphoAllocator {
   IMetaMorpho immutable METAMORPHO_VAULT;
 
   /// @notice A predefined constant representing the minimum collateralization liquidation factor
-  uint256 immutable MIN_CLF = 3;
+  uint256 immutable MIN_CLF = 3e18;
 
   constructor(SmartLTV smartLTV, address morphoVaultAddress) {
     SMART_LTV = smartLTV;
