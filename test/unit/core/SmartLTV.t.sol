@@ -335,33 +335,6 @@ contract SmartLTVTest is Test {
     );
   }
 
-  function testGeneralExp() public view {
-    uint256 expResult = RiskyMath.generalExp(10.4621863982718417e18, 59);
-    console.log("expResult: %s", expResult);
-    uint divResult = (1e18 * (1 << 59)) / expResult;
-    console.log("divResult: %s", divResult);
-    uint256 liquidationBonus = 0.01e18; // 1% liquidation bonus
-    (, uint256 computedLTV) = Math.trySub(divResult, liquidationBonus);
-    console.log("computedLTV: %s", computedLTV);
-
-    // uint256 _x = 28218330286004883161;
-    // uint256 _precision = 59;
-    // uint256 xi = 20656055046679797110407754736192064307563838152490180432010;
-    // console.log("before");
-    // xi = (xi * _x);
-    // console.log("middle");
-    // xi = xi >> _precision;
-    // console.log("after");
-
-    // uint256 liquidity = 10_000_000e18; // 10M liquidity
-    // uint256 cap = 10_000_000e18; // 10M cap
-    // uint256 volatility = 0.99e18; // 99% volatility
-    // uint256 minCLF = 4.9e18;
-    // uint256 liquidationBonus = 0.19e18; // 19% liquidation bonus
-
-    // computeLtv(liquidity, volatility, cap, minCLF, liquidationBonus);
-  }
-
   function testLTVCalculationFuzzing(
     uint256 liquiditySeed,
     uint256 volatilitySeed,
