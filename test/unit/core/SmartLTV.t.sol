@@ -423,4 +423,30 @@ contract SmartLTVTest is Test {
     // assertEq(ltv, 12);
     assertApproxEqAbs(ltv, 0.82444657e18, 0.00000001e18);
   }
+
+  function testLTVCalculationMaxMantissa() public {
+    uint256 liquidity = 10_000_000e18; // 10M liquidity
+    uint256 cap = 10_000_000e18; // 10M cap
+    uint256 volatility = 9.99e18; // 999% volatility
+    uint256 minCLF = 4.9e18;
+    uint256 liquidationBonus = 0.19e18; // 19% liquidation bonus
+
+    (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = signDataValid(liquidity, volatility);
+    // Call the ltv function
+    uint256 ltv = smartLTV.ltv(
+      collateralAddress, // collateralAsset
+      debtAddress, // debtAsset
+      cap, // d = supply cap
+      liquidationBonus, // beta = liquidation bonus
+      minCLF, // minClf
+      data,
+      v,
+      r,
+      s
+    );
+
+    console.log("computed ltv: %s", ltv);
+    // assertEq(ltv, 12);
+    assertEq(ltv, 0);
+  }
 }

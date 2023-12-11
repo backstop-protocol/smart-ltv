@@ -10,6 +10,7 @@
   "scripts": {
     "test": "forge test",
     "test-unit": "forge test --match-path ./test/unit/**.sol",
+    "coverage": "forge coverage --match-path './test/unit/**' --report lcov --report summary",
     "test-goerli": "forge test --match-path './test/integration/**' --fork-url $GOERLI_RPC_URL -vvv",
     "build": "forge build",
     "prettier-format": "prettier --config .prettierrc \"./(src|test)/**/*.sol\" --write",
