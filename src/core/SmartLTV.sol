@@ -2,6 +2,7 @@
 pragma solidity >=0.8.2 <0.9.0;
 
 import {Pythia} from "./Pythia.sol";
+import {Math} from "../../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 import {RiskData} from "../interfaces/RiskData.sol";
 import {RiskyMath} from "../lib/RiskyMath.sol";
 import {ErrorLib} from "../lib/ErrorLib.sol";
@@ -11,6 +12,10 @@ import {ErrorLib} from "../lib/ErrorLib.sol";
 /// @notice This contract calculates the Loan-to-Value (LTV) ratio based on market and risk data.
 /// @dev The contract utilizes the Pythia contract for data verification and the RiskyMath library for mathematical operations.
 contract SmartLTV {
+  /// @notice defines the max mantissa when computing the ltv
+  ///         everything higher than this is 0% ltv
+  uint256 public immutable MAX_MANTISSA = 10.4621863982718417e18;
+
   /// @notice Address of the Pythia contract used for signature verification
   Pythia public immutable PYTHIA;
 
@@ -82,16 +87,23 @@ contract SmartLTV {
       revert ErrorLib.DEBT_MISMATCH(riskData.debtAsset, debtAsset);
     }
 
-    uint sigma = riskData.volatility;
-    uint l = riskData.liquidity;
-
     // LTV  = e ^ (-c * sigma / sqrt(l/d)) - beta
-    uint cTimesSigma = (minClf * sigma) / 1e18;
-    uint sqrtValue = RiskyMath.sqrt((1e18 * l) / d) * 1e9;
+    // with c = confidence level factor
+    // sigma = volatility
+    // l = liquidity
+    // d = cap
+    // beta = liquidation bonus
+    uint cTimesSigma = (minClf * riskData.volatility) / 1e18;
+    uint sqrtValue = RiskyMath.sqrt((1e18 * riskData.liquidity) / d) * 1e9;
     uint mantissa = ((1 << 59) * cTimesSigma) / sqrtValue;
 
-    uint expResult = RiskyMath.generalExp(mantissa, 59);
+    // when mantissa is higher than MAX_MANTISSA, ltv is 0%
+    if (mantissa >= MAX_MANTISSA) {
+      return 0;
+    }
 
-    return (1e18 * (1 << 59)) / expResult - beta;
+    uint expResult = RiskyMath.generalExp(mantissa, 59);
+    (, uint256 computedLTV) = Math.trySub((1e18 * (1 << 59)) / expResult, beta);
+    return computedLTV;
   }
 }

@@ -3,10 +3,13 @@ pragma solidity ^0.8.2;
 
 import "../../../lib/forge-std/src/Test.sol";
 import {Pythia} from "../../../src/core/Pythia.sol";
+
 import {SmartLTV} from "../../../src/core/SmartLTV.sol";
 import {RiskData} from "../../../src/interfaces/RiskData.sol";
 import {ECDSA} from "../../../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "../../../lib/openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
+import {Math} from "../../../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
+import {RiskyMath} from "../../../src/lib/RiskyMath.sol";
 
 contract SmartLTVTest is Test {
   SmartLTV public smartLTV;
@@ -26,6 +29,68 @@ contract SmartLTVTest is Test {
     smartLTV = new SmartLTV(pythia, trustedRelayerAddress);
     vm.warp(1679067867);
     vm.roll(16848497);
+  }
+
+  function computeLtv(
+    uint256 liquidity,
+    uint256 volatility,
+    uint256 cap,
+    uint256 minCLF,
+    uint256 liquidationBonus
+  ) internal view returns (uint256) {
+    console.log("liquidity: %s", liquidity);
+    console.log("volatility: %s", volatility);
+    console.log("cap: %s", cap);
+    console.log("minCLF: %s", minCLF);
+    console.log("liquidationBonus: %s", liquidationBonus);
+
+    // does the same calculation as the smartLTV contract
+    uint cTimesSigma = (minCLF * volatility) / 1e18;
+    console.log("cTimesSigma: %s", cTimesSigma);
+    uint sqrtValue = RiskyMath.sqrt((1e18 * liquidity) / cap) * 1e9;
+    console.log("sqrtValue: %s", sqrtValue);
+    uint mantissa = ((1 << 59) * cTimesSigma) / sqrtValue;
+    console.log("mantissa: %s", mantissa);
+    // when mantissa is higher than MAX_MANTISSA, ltv is 0%
+    if (mantissa >= smartLTV.MAX_MANTISSA()) {
+      return 0;
+    }
+    uint expResult = RiskyMath.generalExp(mantissa, 59);
+    console.log("expResult: %s", expResult);
+    uint divResult = (1e18 * (1 << 59)) / expResult;
+    console.log("divResult: %s", divResult);
+    (, uint256 computedLTV) = Math.trySub(divResult, liquidationBonus);
+    return computedLTV;
+  }
+
+  function signDataValid(
+    uint256 liquidity,
+    uint256 volatility
+  ) internal view returns (RiskData memory data, uint8 v, bytes32 r, bytes32 s) {
+    data = RiskData({
+      collateralAsset: collateralAddress,
+      debtAsset: debtAddress,
+      liquidity: liquidity,
+      volatility: volatility,
+      lastUpdate: block.timestamp - 3600, // 1 hour old data
+      chainId: block.chainid
+    });
+
+    // sign risk data
+    bytes32 structHash = keccak256(
+      abi.encode(
+        pythia.RISKDATA_TYPEHASH(),
+        data.collateralAsset,
+        data.debtAsset,
+        data.liquidity,
+        data.volatility,
+        data.lastUpdate,
+        data.chainId
+      )
+    );
+
+    bytes32 digest = MessageHashUtils.toTypedDataHash(pythia.DOMAIN_SEPARATOR(), structHash);
+    (v, r, s) = vm.sign(trustedRelayerPrivateKey, digest);
   }
 
   function testInitialization() public {
@@ -270,41 +335,59 @@ contract SmartLTVTest is Test {
     );
   }
 
-  function testLTVCalculationFuzzing(uint256 liquiditySeed, uint256 volatilitySeed) public {
-    uint256 liquidity = bound(liquiditySeed, 10e18, 1e30);
-    uint256 volatility = bound(volatilitySeed, 0.01e18, 100e18);
-    RiskData memory data = RiskData({
-      collateralAsset: collateralAddress,
-      debtAsset: debtAddress,
-      liquidity: liquidity,
-      volatility: volatility,
-      lastUpdate: block.timestamp - 3600, // 1 hour old data
-      chainId: block.chainid
-    });
+  function testGeneralExp() public view {
+    uint256 expResult = RiskyMath.generalExp(10.4621863982718417e18, 59);
+    console.log("expResult: %s", expResult);
+    uint divResult = (1e18 * (1 << 59)) / expResult;
+    console.log("divResult: %s", divResult);
+    uint256 liquidationBonus = 0.01e18; // 1% liquidation bonus
+    (, uint256 computedLTV) = Math.trySub(divResult, liquidationBonus);
+    console.log("computedLTV: %s", computedLTV);
 
-    // sign risk data
-    bytes32 structHash = keccak256(
-      abi.encode(
-        pythia.RISKDATA_TYPEHASH(),
-        data.collateralAsset,
-        data.debtAsset,
-        data.liquidity,
-        data.volatility,
-        data.lastUpdate,
-        data.chainId
-      )
-    );
+    // uint256 _x = 28218330286004883161;
+    // uint256 _precision = 59;
+    // uint256 xi = 20656055046679797110407754736192064307563838152490180432010;
+    // console.log("before");
+    // xi = (xi * _x);
+    // console.log("middle");
+    // xi = xi >> _precision;
+    // console.log("after");
 
-    bytes32 digest = MessageHashUtils.toTypedDataHash(pythia.DOMAIN_SEPARATOR(), structHash);
-    (uint8 v, bytes32 r, bytes32 s) = vm.sign(trustedRelayerPrivateKey, digest);
+    // uint256 liquidity = 10_000_000e18; // 10M liquidity
+    // uint256 cap = 10_000_000e18; // 10M cap
+    // uint256 volatility = 0.99e18; // 99% volatility
+    // uint256 minCLF = 4.9e18;
+    // uint256 liquidationBonus = 0.19e18; // 19% liquidation bonus
+
+    // computeLtv(liquidity, volatility, cap, minCLF, liquidationBonus);
+  }
+
+  function testLTVCalculationFuzzing(
+    uint256 liquiditySeed,
+    uint256 volatilitySeed,
+    uint256 capSeed,
+    uint256 liquidationBonusSeed,
+    uint256 minCLFSeed
+  ) public {
+    uint256 liquidity = bound(liquiditySeed, 1_000e18, 100_000_000e18); // 1k to 100M liquidity
+    // 1 is 100%, 0.1 is 10%, 0.01 is 1%, 0.001 is 0.1%
+    uint256 volatility = bound(volatilitySeed, 0.001e18, 10e18); // 0.1% to 1000% volatility
+    uint256 cap = bound(capSeed, 1_000e18, 100_000_000e18); // 1k to 100M cap
+    uint256 liquidationBonus = bound(liquidationBonusSeed, 0.01e18, 0.2e18); // 1% to 20% liquidation bonus
+    uint256 minCLF = bound(minCLFSeed, 0.1e18, 5e18); // 0.1 to 5 CLF
+
+    uint256 testLtv = computeLtv(liquidity, volatility, cap, minCLF, liquidationBonus);
+    vm.assume(testLtv > 0);
+
+    (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = signDataValid(liquidity, volatility);
 
     // Call the ltv function
     uint256 ltv = smartLTV.ltv(
       collateralAddress, // collateralAsset
       debtAddress, // debtAsset
-      200_000e18, // d = supply cap
-      0.05e18, // beta = liquidation bonus
-      3e18, // minClf
+      cap, // d = supply cap
+      liquidationBonus, // beta = liquidation bonus
+      minCLF, // minClf
       data,
       v,
       r,
@@ -312,7 +395,7 @@ contract SmartLTVTest is Test {
     );
 
     console.log("computed ltv: %s", ltv);
-    assertGt(ltv, 0);
+    assertEq(ltv, testLtv);
   }
 
   function testLTVCalculationExact() public {
@@ -322,31 +405,7 @@ contract SmartLTVTest is Test {
     uint256 liquidationBonus = 0.05e18; // 5% liquidation bonus
     uint256 minCLF = 3e18;
 
-    RiskData memory data = RiskData({
-      collateralAsset: collateralAddress,
-      debtAsset: debtAddress,
-      liquidity: liquidity,
-      volatility: volatility,
-      lastUpdate: block.timestamp - 3600, // 1 hour old data
-      chainId: block.chainid
-    });
-
-    // sign risk data
-    bytes32 structHash = keccak256(
-      abi.encode(
-        pythia.RISKDATA_TYPEHASH(),
-        data.collateralAsset,
-        data.debtAsset,
-        data.liquidity,
-        data.volatility,
-        data.lastUpdate,
-        data.chainId
-      )
-    );
-
-    bytes32 digest = MessageHashUtils.toTypedDataHash(pythia.DOMAIN_SEPARATOR(), structHash);
-    (uint8 v, bytes32 r, bytes32 s) = vm.sign(trustedRelayerPrivateKey, digest);
-
+    (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = signDataValid(liquidity, volatility);
     // Call the ltv function
     uint256 ltv = smartLTV.ltv(
       collateralAddress, // collateralAsset
@@ -362,6 +421,6 @@ contract SmartLTVTest is Test {
 
     console.log("computed ltv: %s", ltv);
     // assertEq(ltv, 12);
-    assertApproxEqAbs(ltv, 0.824e18, 0.001e18);
+    assertApproxEqAbs(ltv, 0.82444657e18, 0.00000001e18);
   }
 }
