@@ -12,10 +12,10 @@ import {ErrorLib} from "../lib/ErrorLib.sol";
 /// @dev The contract utilizes the Pythia contract for data verification and the RiskyMath library for mathematical operations.
 contract SmartLTV {
   /// @notice Address of the Pythia contract used for signature verification
-  Pythia immutable PYTHIA;
+  Pythia public immutable PYTHIA;
 
   /// @notice Address of the trusted relayer for verifying data authenticity
-  address immutable TRUSTED_RELAYER;
+  address public immutable TRUSTED_RELAYER;
 
   /// @notice Initializes the SmartLTV contract with Pythia and TRUSTED_RELAYER addresses.
   /// @param pythia The Pythia contract address used for data verification.
@@ -68,7 +68,6 @@ contract SmartLTV {
     }
 
     // chain id
-
     if (riskData.chainId != block.chainid) {
       revert ErrorLib.WRONG_CHAINID(riskData.chainId, block.chainid);
     }
