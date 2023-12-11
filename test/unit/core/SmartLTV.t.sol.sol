@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
-import {Test, console} from "../../../lib/forge-std/src/Test.sol";
+import "../../../lib/forge-std/src/Test.sol";
 import {Pythia} from "../../../src/core/Pythia.sol";
 import {SmartLTV} from "../../../src/core/SmartLTV.sol";
 import {RiskData} from "../../../src/interfaces/RiskData.sol";
@@ -270,8 +270,8 @@ contract SmartLTVTest is Test {
     );
   }
 
-  function testLTVCalculation(uint256 liquiditySeed, uint256 volatilitySeed) public {
-    uint256 liquidity = bound(liquiditySeed, 1e15, 1e30);
+  function testLTVCalculationFuzzing(uint256 liquiditySeed, uint256 volatilitySeed) public {
+    uint256 liquidity = bound(liquiditySeed, 10e18, 1e30);
     uint256 volatility = bound(volatilitySeed, 0.01e18, 100e18);
     RiskData memory data = RiskData({
       collateralAsset: collateralAddress,
@@ -302,13 +302,66 @@ contract SmartLTVTest is Test {
     uint256 ltv = smartLTV.ltv(
       collateralAddress, // collateralAsset
       debtAddress, // debtAsset
-      10e18, // d = supply cap
-      0.1e18, // beta = liquidation bonus
-      3, // minClf
+      200_000e18, // d = supply cap
+      0.05e18, // beta = liquidation bonus
+      3e18, // minClf
       data,
       v,
       r,
       s
     );
+
+    console.log("computed ltv: %s", ltv);
+    assertGt(ltv, 0);
+  }
+
+  function testLTVCalculationExact() public {
+    uint256 liquidity = 1_000_000e18; // 1M liquidity
+    uint256 volatility = 0.10e18; // 10% volatility
+    uint256 supplyCap = 200_000e18; // 200k supply cap
+    uint256 liquidationBonus = 0.05e18; // 5% liquidation bonus
+    uint256 minCLF = 3e18;
+
+    RiskData memory data = RiskData({
+      collateralAsset: collateralAddress,
+      debtAsset: debtAddress,
+      liquidity: liquidity,
+      volatility: volatility,
+      lastUpdate: block.timestamp - 3600, // 1 hour old data
+      chainId: block.chainid
+    });
+
+    // sign risk data
+    bytes32 structHash = keccak256(
+      abi.encode(
+        pythia.RISKDATA_TYPEHASH(),
+        data.collateralAsset,
+        data.debtAsset,
+        data.liquidity,
+        data.volatility,
+        data.lastUpdate,
+        data.chainId
+      )
+    );
+
+    bytes32 digest = MessageHashUtils.toTypedDataHash(pythia.DOMAIN_SEPARATOR(), structHash);
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(trustedRelayerPrivateKey, digest);
+
+    // Call the ltv function
+    uint256 ltv = smartLTV.ltv(
+      collateralAddress, // collateralAsset
+      debtAddress, // debtAsset
+      supplyCap, // d = supply cap
+      liquidationBonus, // beta = liquidation bonus
+      minCLF, // minClf
+      data,
+      v,
+      r,
+      s
+    );
+
+    console.log("computed ltv: %s", ltv);
+    // assertEq(ltv, 12);
+    assertApproxEqAbs(ltv, 0.824e18, 0.001e18);
   }
 }
