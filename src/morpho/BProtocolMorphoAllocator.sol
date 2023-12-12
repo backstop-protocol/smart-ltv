@@ -38,13 +38,13 @@ contract BProtocolMorphoAllocator {
   using MathLib for uint256;
 
   /// @notice The SmartLTV contract used for loan-to-value calculations
-  SmartLTV immutable SMART_LTV;
+  SmartLTV public immutable SMART_LTV;
 
   /// @notice The MetaMorpho Vault contract address for market allocations
-  IMetaMorpho immutable METAMORPHO_VAULT;
+  IMetaMorpho public immutable METAMORPHO_VAULT;
 
   /// @notice A predefined constant representing the minimum collateralization liquidation factor
-  uint256 immutable MIN_CLF = 3e18;
+  uint256 public immutable MIN_CLF = 3e18;
 
   constructor(SmartLTV smartLTV, address morphoVaultAddress) {
     SMART_LTV = smartLTV;

@@ -25,7 +25,6 @@ contract SmartLTVTest is Test {
 
   /// @notice Set up the testing environment
   function setUp() public {
-    // Deploy and set up contracts here
     pythia = new Pythia();
     smartLTV = new SmartLTV(pythia, trustedRelayerAddress);
     vm.warp(1679067867);
