@@ -9,6 +9,7 @@ import {ECDSA} from "../../../lib/openzeppelin-contracts/contracts/utils/cryptog
 import {MessageHashUtils} from "../../../lib/openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
 import {Math} from "../../../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 import {RiskyMath} from "../../../src/lib/RiskyMath.sol";
+import "../../../src/lib/ErrorLib.sol";
 
 /// @title Testing the SmartLTV Contract for Loan-to-Value Calculation
 contract SmartLTVTest is Test {
@@ -141,7 +142,7 @@ contract SmartLTVTest is Test {
 
     // Expect revert with INVALID_SIGNER error
     vm.expectRevert(
-      abi.encodeWithSignature("INVALID_SIGNER(address,address)", wrongRelayerAddress, trustedRelayerAddress)
+      abi.encodeWithSelector(ErrorLib.INVALID_SIGNER.selector, wrongRelayerAddress, trustedRelayerAddress)
     );
 
     // Call the ltv function
@@ -197,7 +198,7 @@ contract SmartLTVTest is Test {
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(trustedRelayerPrivateKey, digest);
 
     // Expect revert with INVALID_SIGNER error
-    vm.expectRevert(abi.encodeWithSignature("TIMEOUT()"));
+    vm.expectRevert(abi.encodeWithSelector(ErrorLib.TIMEOUT.selector));
 
     // Call the ltv function
     smartLTV.ltv(
@@ -252,7 +253,7 @@ contract SmartLTVTest is Test {
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(trustedRelayerPrivateKey, digest);
 
     // Expect revert with INVALID_SIGNER error
-    vm.expectRevert(abi.encodeWithSignature("WRONG_CHAINID(uint256,uint256)", data.chainId, block.chainid));
+    vm.expectRevert(abi.encodeWithSelector(ErrorLib.WRONG_CHAINID.selector, data.chainId, block.chainid));
 
     // Call the ltv function
     smartLTV.ltv(
@@ -300,7 +301,7 @@ contract SmartLTVTest is Test {
 
     address collateral = address(0);
     // Expect revert with INVALID_SIGNER error
-    vm.expectRevert(abi.encodeWithSignature("COLLATERAL_MISMATCH(address,address)", data.collateralAsset, collateral));
+    vm.expectRevert(abi.encodeWithSelector(ErrorLib.COLLATERAL_MISMATCH.selector, data.collateralAsset, collateral));
 
     // Call the ltv function
     smartLTV.ltv(
@@ -346,7 +347,7 @@ contract SmartLTVTest is Test {
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(trustedRelayerPrivateKey, digest);
 
     // Expect revert with INVALID_SIGNER error
-    vm.expectRevert(abi.encodeWithSignature("DEBT_MISMATCH(address,address)", data.debtAsset, address(0)));
+    vm.expectRevert(abi.encodeWithSelector(ErrorLib.DEBT_MISMATCH.selector, data.debtAsset, address(0)));
 
     // Call the ltv function
     smartLTV.ltv(
