@@ -16,6 +16,7 @@ import "../../mocks/MockMetaMorpho.sol";
 import "../../../src/external/Morpho.sol";
 import "../../../src/morpho/BProtocolMorphoAllocator.sol";
 
+/// @title Testing BProtocolMorphoAllocator Contract for Market reallocation with Risk Management
 contract BProtocolMorphoAllocatorTest is Test {
   Pythia public pythia;
   SmartLTV public smartLTV;
@@ -117,6 +118,7 @@ contract BProtocolMorphoAllocatorTest is Test {
     mockMetaMorpho.setConfig(MorphoLib.id(market2), configDataMarket2);
   }
 
+  /// @notice Sets up the testing environment with necessary contract instances and configurations
   function setUp() public {
     pythia = new Pythia();
     smartLTV = new SmartLTV(pythia, trustedRelayerAddress);
@@ -129,12 +131,15 @@ contract BProtocolMorphoAllocatorTest is Test {
     vm.roll(16848497);
   }
 
+  /// @notice Tests the correct initialization of the BProtocolMorphoAllocator contract and its dependencies
   function testInitialization() public {
     assertEq(address(morphoAllocator.SMART_LTV()), address(smartLTV));
     assertEq(address(morphoAllocator.METAMORPHO_VAULT()), address(mockMetaMorpho));
     assertGt(morphoAllocator.MIN_CLF(), uint256(0));
   }
 
+  /// @notice Tests the checkAndReallocate function with mismatched lengths of the allocations
+  ///         and riskDatas arrays, expecting a revert with INVALID_RISK_DATA_COUNT error
   function testCheckAndReallocateWithMismatchedArrayLengths() public {
     // Create two MarketAllocations
     MarketAllocation[] memory allocations = new MarketAllocation[](2);
@@ -168,6 +173,8 @@ contract BProtocolMorphoAllocatorTest is Test {
     morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures);
   }
 
+  /// @notice Tests the checkAndReallocate function with mismatched lengths of the riskDatas
+  ///         and signatures arrays, expecting a revert with INVALID_SIGNATURE_COUNT error
   function testCheckAndReallocateWithMismatchedSignatureArrayLengths() public {
     MarketAllocation[] memory allocations = new MarketAllocation[](1);
     allocations[0] = MarketAllocation({marketParams: market1, assets: 1000});
@@ -202,6 +209,8 @@ contract BProtocolMorphoAllocatorTest is Test {
     morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures);
   }
 
+  /// @notice Tests the checkAndReallocate function with a withdrawal scenario, verifying correct handling of withdraw requests
+  ///         that should not check the risk levels
   function testCheckReallocateWithWitdraw() public {
     // first we set a position for the market1
     PositionInfo memory pInfo = PositionInfo({supplyShares: 1000e18, borrowShares: 0, collateral: 0});
@@ -234,6 +243,8 @@ contract BProtocolMorphoAllocatorTest is Test {
     morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures);
   }
 
+  /// @notice Tests the checkAndReallocate function with a scenario where supplying is too risky,
+  ///         expecting a revert with LTV_TOO_HIGH error
   function testCheckReallocateSupplyTooRisky() public {
     // first we set a position for the market1
     PositionInfo memory pInfo = PositionInfo({supplyShares: 1000e18, borrowShares: 0, collateral: 0});
@@ -265,6 +276,7 @@ contract BProtocolMorphoAllocatorTest is Test {
     morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures);
   }
 
+  /// @notice Tests the checkAndReallocate function with a valid risk scenario, verifying correct allocation without error
   function testCheckReallocateSupplyValidRisk() public {
     // first we set a position for the market1
     PositionInfo memory pInfo = PositionInfo({supplyShares: 1000e18, borrowShares: 0, collateral: 0});
@@ -296,6 +308,8 @@ contract BProtocolMorphoAllocatorTest is Test {
     morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures);
   }
 
+  /// @notice Tests the checkAndReallocate function with a combination of withdrawal and risky supply,
+  ///         expecting a revert with LTV_TOO_HIGH error
   function testCheckReallocateWithdrawAndSupplyTooRisky() public {
     // first we set a position for the market1, where we want to withdraw
     PositionInfo memory pInfo1 = PositionInfo({supplyShares: 1000e18, borrowShares: 0, collateral: 0});
@@ -349,6 +363,8 @@ contract BProtocolMorphoAllocatorTest is Test {
     morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures);
   }
 
+  /// @notice Tests the checkAndReallocate function with a combination of withdrawal and valid supply,
+  ///         verifying correct processing of both actions
   function testCheckReallocateWithdrawAndSupplyValid() public {
     // first we set a position for the market1, where we want to withdraw
     PositionInfo memory pInfo1 = PositionInfo({supplyShares: 1000e18, borrowShares: 0, collateral: 0});
