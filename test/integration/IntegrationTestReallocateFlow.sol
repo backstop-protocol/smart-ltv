@@ -8,10 +8,8 @@ import "../TestUtils.sol";
 /// @title Integration Test for Reallocate Flow in Morpho Protocol
 /// @notice This contract tests the reallocation flow in the Morpho protocol, focusing on markets for SDAI, USDT, and IDLE.
 /// @dev Inherits from MorphoFixture to leverage common testing setup and utilities.
+/// @dev You need to fork goerli for these tests to work (set env variable GOERLI_RPC_URL)
 contract IntegrationTestReallocateFlow is MorphoFixture {
-  Id marketIdSDAI = Id.wrap(0x7a9e4757d1188de259ba5b47f4c08197f821e54109faa5b0502b9dfe2c10b741);
-  Id marketIdUSDT = Id.wrap(0xbc6d1789e6ba66e5cd277af475c5ed77fcf8b084347809d9d92e400ebacbdd10);
-  Id marketIdIdle = Id.wrap(0x655f87b795c56753741185b9f6fa24c9eb8411bbbbadb44335c9cd4ee0883990);
   MarketParams marketParamSDAI;
   MarketParams marketParamUSDT;
   MarketParams marketParamIdle;
@@ -102,7 +100,7 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
     assertNotEq(address(0), marketParamUSDT.collateralToken);
     assertNotEq(address(0), marketParamUSDT.loanToken);
     assertNotEq(marketParamSDAI.collateralToken, marketParamUSDT.collateralToken);
-    assertEq(address(0), marketParamIdle.loanToken);
+    assertEq(address(0), marketParamIdle.collateralToken);
   }
 
   /// @notice Tests the reallocation process for the USDT market.
