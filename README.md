@@ -1,66 +1,51 @@
-## Foundry
+# Smart LTV
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+Smart LTV is a Solidity-based project focused on optimizing loan-to-value calculations and risk management in decentralized finance. It integrates advanced algorithms for efficient market allocation and data verification using EIP712 standards.
 
-Foundry consists of:
+## Installation
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+To set up the project, you'll need Foundry and NodeJS installed
 
-## Documentation
+`npm install`
 
-https://book.getfoundry.sh/
+## Scripts
 
-## Usage
+### Test Unit: Run unit tests with the command:
 
-### Build
 
-```shell
-$ forge build
+`npm run test-unit`
+
+### Test Integration: Execute integration tests on a Goerli testnet fork:
+
+```
+export GOERLI_RPC_URL=<your-goerli-rpc-url>
+npm run test-integration
 ```
 
-### Test
+### Coverage: Generate and view coverage reports:
 
-```shell
-$ forge test
-```
+`npm run coverage`
 
-### Format
+### Build: Compile the smart contracts:
 
-```shell
-$ forge fmt
-```
+`npm run build`
 
-### Gas Snapshots
+### Prettier-Format: Format your Solidity files:
 
-```shell
-$ forge snapshot
-```
+`npm run prettier-format`
 
-### Anvil
+### Prettier-Watch: Auto-format Solidity files on changes:
 
-```shell
-$ anvil
-```
+`npm run prettier-watch`
 
-### Deploy
+## Development
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+This project uses Foundry for smart contract development. Follow these best practices:
 
-### Cast
+- Compile contracts with forge build.
+- Write unit tests in test/unit and integration tests in test/integration.
+- Ensure code quality by using Prettier for formatting.
 
-```shell
-$ cast <subcommand>
-```
+## Contributions
 
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+Contributions are welcome! Please ensure you follow the testing and coding standards mentioned above.
