@@ -2,6 +2,6 @@
 src = "src"
 out = "out"
 # contracts in libs are excluded from code coverage reports
-libs = ["lib", 'src/external']
+libs = ["lib", "src/external", "test/mocks"]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

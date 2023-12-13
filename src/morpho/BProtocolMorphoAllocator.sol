@@ -7,6 +7,7 @@ import {IMetaMorpho, MarketAllocation, Id, MarketParams, IMorpho, MathLib, WAD, 
 import {RiskyMath} from "../lib/RiskyMath.sol";
 import {MorphoLib} from "../external/Morpho.sol";
 import {ErrorLib} from "../lib/ErrorLib.sol";
+import "../../lib/forge-std/src/Test.sol";
 
 /*  
 USDC/sDAI
@@ -38,13 +39,13 @@ contract BProtocolMorphoAllocator {
   using MathLib for uint256;
 
   /// @notice The SmartLTV contract used for loan-to-value calculations
-  SmartLTV immutable SMART_LTV;
+  SmartLTV public immutable SMART_LTV;
 
   /// @notice The MetaMorpho Vault contract address for market allocations
-  IMetaMorpho immutable METAMORPHO_VAULT;
+  IMetaMorpho public immutable METAMORPHO_VAULT;
 
   /// @notice A predefined constant representing the minimum collateralization liquidation factor
-  uint256 immutable MIN_CLF = 3e18;
+  uint256 public immutable MIN_CLF = 3e18;
 
   constructor(SmartLTV smartLTV, address morphoVaultAddress) {
     SMART_LTV = smartLTV;
@@ -73,24 +74,33 @@ contract BProtocolMorphoAllocator {
     }
 
     for (uint256 i = 0; i < allocations.length; i++) {
-      MarketAllocation memory allocation = allocations[i];
-
-      // find the market Id for this allocation
-      Id marketId = MorphoLib.id(allocation.marketParams);
-
-      // get the market infos from morpho blue contract
-      (uint128 totalSupplyAssets, uint128 totalSupplyShares, , , , ) = METAMORPHO_VAULT.MORPHO().market(marketId);
-
-      if (!_isWithdraw(marketId, allocation.assets, totalSupplyAssets, totalSupplyShares)) {
-        // only check risk if not withdraw
-        // because we want to allow withdraw for a risky market
-        uint256 currentCap = _getCurrentCap(marketId, totalSupplyAssets);
-        _checkAllocationRisk(currentCap, allocation.marketParams.lltv, riskDatas[i], signatures[i]);
-      }
+      _checkAllocation(allocations[i], riskDatas[i], signatures[i]);
     }
 
     // call reallocate
     METAMORPHO_VAULT.reallocate(allocations);
+  }
+
+  function _checkAllocation(
+    MarketAllocation memory allocation,
+    RiskData memory riskData,
+    Signature memory signature
+  ) internal view {
+    // find the market Id for this allocation
+    Id marketId = MorphoLib.id(allocation.marketParams);
+
+    // get the market infos from morpho blue contract
+    (uint128 totalSupplyAssets, uint128 totalSupplyShares, , , , ) = METAMORPHO_VAULT.MORPHO().market(marketId);
+
+    if (!_isWithdraw(marketId, allocation.assets, totalSupplyAssets, totalSupplyShares)) {
+      console.log("allocation is a supply");
+      // only check risk if not withdraw
+      // because we want to allow withdraw for a risky market
+      uint256 currentCap = _getCurrentCap(marketId, totalSupplyAssets);
+      _checkAllocationRisk(currentCap, allocation.marketParams.lltv, riskData, signature);
+    } else {
+      console.log("allocation is a withdraw");
+    }
   }
 
   function _isWithdraw(

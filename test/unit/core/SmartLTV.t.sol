@@ -3,14 +3,14 @@ pragma solidity ^0.8.2;
 
 import "../../../lib/forge-std/src/Test.sol";
 import {Pythia} from "../../../src/core/Pythia.sol";
-
 import {SmartLTV} from "../../../src/core/SmartLTV.sol";
 import {RiskData} from "../../../src/interfaces/RiskData.sol";
-import {ECDSA} from "../../../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "../../../lib/openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
 import {Math} from "../../../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 import {RiskyMath} from "../../../src/lib/RiskyMath.sol";
+import "../../../src/lib/ErrorLib.sol";
 
+/// @title Testing the SmartLTV Contract for Loan-to-Value Calculation
 contract SmartLTVTest is Test {
   SmartLTV public smartLTV;
   Pythia public pythia;
@@ -23,8 +23,8 @@ contract SmartLTVTest is Test {
   address collateralAddress = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
   address debtAddress = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
 
+  /// @notice Set up the testing environment
   function setUp() public {
-    // Deploy and set up contracts here
     pythia = new Pythia();
     smartLTV = new SmartLTV(pythia, trustedRelayerAddress);
     vm.warp(1679067867);
@@ -93,11 +93,19 @@ contract SmartLTVTest is Test {
     (v, r, s) = vm.sign(trustedRelayerPrivateKey, digest);
   }
 
+  /// @notice Tests the initialization and correct setting of dependencies in the SmartLTV contract
   function testInitialization() public {
     assertEq(address(smartLTV.PYTHIA()), address(pythia));
     assertEq(smartLTV.TRUSTED_RELAYER(), trustedRelayerAddress);
   }
 
+  /// @notice Tests the LTV calculation function in the SmartLTV contract with incorrect signer, expecting a revert
+  /// @param collateralAsset The address of the collateral asset
+  /// @param debtAsset The address of the debt asset
+  /// @param liquidity The liquidity value
+  /// @param volatility The volatility value
+  /// @param lastUpdate The timestamp of the last update
+  /// @param chainId The chain ID
   function testLTVWrongSignerShouldRevert(
     address collateralAsset,
     address debtAsset,
@@ -133,7 +141,7 @@ contract SmartLTVTest is Test {
 
     // Expect revert with INVALID_SIGNER error
     vm.expectRevert(
-      abi.encodeWithSignature("INVALID_SIGNER(address,address)", wrongRelayerAddress, trustedRelayerAddress)
+      abi.encodeWithSelector(ErrorLib.INVALID_SIGNER.selector, wrongRelayerAddress, trustedRelayerAddress)
     );
 
     // Call the ltv function
@@ -150,6 +158,12 @@ contract SmartLTVTest is Test {
     );
   }
 
+  /// @notice Tests the LTV calculation function in the SmartLTV contract with outdated data, expecting a revert
+  /// @param collateralAsset The address of the collateral asset
+  /// @param debtAsset The address of the debt asset
+  /// @param liquidity The liquidity value
+  /// @param volatility The volatility value
+  /// @param chainId The chain ID
   function testLTVDataTooOldShouldRevert(
     address collateralAsset,
     address debtAsset,
@@ -183,7 +197,7 @@ contract SmartLTVTest is Test {
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(trustedRelayerPrivateKey, digest);
 
     // Expect revert with INVALID_SIGNER error
-    vm.expectRevert(abi.encodeWithSignature("TIMEOUT()"));
+    vm.expectRevert(abi.encodeWithSelector(ErrorLib.TIMEOUT.selector));
 
     // Call the ltv function
     smartLTV.ltv(
@@ -199,6 +213,12 @@ contract SmartLTVTest is Test {
     );
   }
 
+  /// @notice Tests the LTV calculation function in the SmartLTV contract with incorrect chain ID, expecting a revert
+  /// @param collateralAsset The address of the collateral asset
+  /// @param debtAsset The address of the debt asset
+  /// @param liquidity The liquidity value
+  /// @param volatility The volatility value
+  /// @param chainIdSeed A seed value to generate an incorrect chain ID
   function testLTVDataWrongChainIdShouldRevert(
     address collateralAsset,
     address debtAsset,
@@ -232,7 +252,7 @@ contract SmartLTVTest is Test {
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(trustedRelayerPrivateKey, digest);
 
     // Expect revert with INVALID_SIGNER error
-    vm.expectRevert(abi.encodeWithSignature("WRONG_CHAINID(uint256,uint256)", data.chainId, block.chainid));
+    vm.expectRevert(abi.encodeWithSelector(ErrorLib.WRONG_CHAINID.selector, data.chainId, block.chainid));
 
     // Call the ltv function
     smartLTV.ltv(
@@ -248,6 +268,10 @@ contract SmartLTVTest is Test {
     );
   }
 
+  /// @notice Tests the LTV calculation function in the SmartLTV contract with incorrect collateral, expecting a revert
+  /// @param debtAsset The address of the debt asset
+  /// @param liquidity The liquidity value
+  /// @param volatility The volatility value
   function testLTVDataWrongCollateralShouldRevert(address debtAsset, uint256 liquidity, uint256 volatility) public {
     RiskData memory data = RiskData({
       collateralAsset: address(25),
@@ -276,7 +300,7 @@ contract SmartLTVTest is Test {
 
     address collateral = address(0);
     // Expect revert with INVALID_SIGNER error
-    vm.expectRevert(abi.encodeWithSignature("COLLATERAL_MISMATCH(address,address)", data.collateralAsset, collateral));
+    vm.expectRevert(abi.encodeWithSelector(ErrorLib.COLLATERAL_MISMATCH.selector, data.collateralAsset, collateral));
 
     // Call the ltv function
     smartLTV.ltv(
@@ -292,6 +316,9 @@ contract SmartLTVTest is Test {
     );
   }
 
+  /// @notice Tests the LTV calculation function in the SmartLTV contract with incorrect debt, expecting a revert
+  /// @param liquidity The liquidity value
+  /// @param volatility The volatility value
   function testLTVDataWrongDebtShouldRevert(uint256 liquidity, uint256 volatility) public {
     RiskData memory data = RiskData({
       collateralAsset: collateralAddress,
@@ -319,7 +346,7 @@ contract SmartLTVTest is Test {
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(trustedRelayerPrivateKey, digest);
 
     // Expect revert with INVALID_SIGNER error
-    vm.expectRevert(abi.encodeWithSignature("DEBT_MISMATCH(address,address)", data.debtAsset, address(0)));
+    vm.expectRevert(abi.encodeWithSelector(ErrorLib.DEBT_MISMATCH.selector, data.debtAsset, address(0)));
 
     // Call the ltv function
     smartLTV.ltv(
@@ -335,6 +362,12 @@ contract SmartLTVTest is Test {
     );
   }
 
+  /// @notice Tests the LTV calculation function in the SmartLTV contract with various inputs using fuzz testing
+  /// @param liquiditySeed A seed value for liquidity
+  /// @param volatilitySeed A seed value for volatility
+  /// @param capSeed A seed value for supply cap
+  /// @param liquidationBonusSeed A seed value for liquidation bonus
+  /// @param minCLFSeed A seed value for minimum CLF
   function testLTVCalculationFuzzing(
     uint256 liquiditySeed,
     uint256 volatilitySeed,
@@ -371,6 +404,7 @@ contract SmartLTVTest is Test {
     assertEq(ltv, testLtv);
   }
 
+  /// @notice Tests the LTV calculation function in the SmartLTV contract with exact values
   function testLTVCalculationExact() public {
     uint256 liquidity = 1_000_000e18; // 1M liquidity
     uint256 volatility = 0.10e18; // 10% volatility
@@ -397,6 +431,8 @@ contract SmartLTVTest is Test {
     assertApproxEqAbs(ltv, 0.82444657e18, 0.00000001e18);
   }
 
+  /// @notice Tests the LTV calculation function in the SmartLTV contract with risk data values
+  ///         generating a case of max mantissa value that should returns a 0% LTV
   function testLTVCalculationMaxMantissa() public {
     uint256 liquidity = 10_000_000e18; // 10M liquidity
     uint256 cap = 10_000_000e18; // 10M cap
