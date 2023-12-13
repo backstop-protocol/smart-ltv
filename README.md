@@ -2,6 +2,10 @@
 
 Smart LTV is a Solidity-based project focused on optimizing loan-to-value calculations and risk management in decentralized finance. It integrates advanced algorithms for efficient market allocation and data verification using EIP712 standards.
 
+## Documentation
+
+The documentation is available [here](./docs/documentation.md)
+
 ## Installation
 
 To set up the project, you'll need Foundry and NodeJS installed
