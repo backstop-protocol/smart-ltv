@@ -19,6 +19,9 @@ contract MorphoFixture is Test {
   IMetaMorpho metaMorpho = IMetaMorpho(0xb6c383fF0257D20e4c9872B6c9F1ce412F4AAC4C);
   IMorpho morpho = IMorpho(0x64c7044050Ba0431252df24fEd4d9635a275CB41);
 
+  // fake function so that does not show up in the coverage report
+  function test() public {}
+
   function setUp() public virtual {
     // create pythia, smartLTV and BProtocolMorphoAllocator contract
     pythia = new Pythia();

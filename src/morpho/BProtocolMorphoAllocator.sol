@@ -91,11 +91,15 @@ contract BProtocolMorphoAllocator {
     // get the market infos from morpho blue contract
     (uint128 totalSupplyAssets, uint128 totalSupplyShares, , , , ) = METAMORPHO_VAULT.MORPHO().market(marketId);
 
-    if (!_isWithdraw(marketId, allocation.assets, totalSupplyAssets, totalSupplyShares)) {
-      // only check risk if not withdraw
-      // because we want to allow withdraw for a risky market
-      uint256 currentCap = _getCurrentCap(marketId, totalSupplyAssets);
-      _checkAllocationRisk(currentCap, allocation.marketParams.lltv, riskData, signature);
+    if (allocation.marketParams.collateralToken != address(0)) {
+      // only check risk if collateral is not address(0)
+      // address(0) for collateral means it's an idle market ==> without risks
+      if (!_isWithdraw(marketId, allocation.assets, totalSupplyAssets, totalSupplyShares)) {
+        // only check risk if not withdraw
+        // because we want to allow withdraw for a risky market
+        uint256 currentCap = _getCurrentCap(marketId, totalSupplyAssets);
+        _checkAllocationRisk(currentCap, allocation.marketParams.lltv, riskData, signature);
+      }
     }
   }
 
@@ -105,6 +109,10 @@ contract BProtocolMorphoAllocator {
     uint128 totalSupplyAsset,
     uint128 totalSupplyShares
   ) internal view returns (bool isWithdraw) {
+    // if allocation assets is zero, consider withdraw by default
+    if (allocationAssets == 0) {
+      return true;
+    }
     // get the vault supply for the market
     uint256 currentVaultMarketSupply = _getVaultMarketSupply(marketId, totalSupplyAsset, totalSupplyShares);
 

@@ -9,6 +9,9 @@ import "../lib/forge-std/src/Test.sol";
 library TestUtils {
   Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
+  // fake function so that does not show up in the coverage report
+  function test() public {}
+
   function signDataValid(
     uint256 trustedRelayerPrivateKey,
     address collateralAddress,
