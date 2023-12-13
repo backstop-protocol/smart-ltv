@@ -11,6 +11,7 @@ import "../../mocks/MockMorpho.sol";
 import "../../mocks/MockMetaMorpho.sol";
 import "../../../src/external/Morpho.sol";
 import "../../../src/morpho/BProtocolMorphoAllocator.sol";
+import "../../TestUtils.sol";
 
 /// @title Testing BProtocolMorphoAllocator Contract for Market reallocation with Risk Management
 contract BProtocolMorphoAllocatorTest is Test {
@@ -47,37 +48,6 @@ contract BProtocolMorphoAllocatorTest is Test {
       irm: irmAddress,
       lltv: 0.1e18
     });
-
-  function signDataValid(
-    address collateralAddress,
-    uint256 liquidity,
-    uint256 volatility
-  ) internal view returns (RiskData memory data, uint8 v, bytes32 r, bytes32 s) {
-    data = RiskData({
-      collateralAsset: collateralAddress,
-      debtAsset: debtAddress,
-      liquidity: liquidity,
-      volatility: volatility,
-      lastUpdate: block.timestamp - 3600, // 1 hour old data
-      chainId: block.chainid
-    });
-
-    // sign risk data
-    bytes32 structHash = keccak256(
-      abi.encode(
-        pythia.RISKDATA_TYPEHASH(),
-        data.collateralAsset,
-        data.debtAsset,
-        data.liquidity,
-        data.volatility,
-        data.lastUpdate,
-        data.chainId
-      )
-    );
-
-    bytes32 digest = MessageHashUtils.toTypedDataHash(pythia.DOMAIN_SEPARATOR(), structHash);
-    (v, r, s) = vm.sign(trustedRelayerPrivateKey, digest);
-  }
 
   // set morpho blue with 2 markets
   function setupMorphoMock() internal {
@@ -256,8 +226,12 @@ contract BProtocolMorphoAllocatorTest is Test {
     uint256 liquidity = 1e18; // low liquidity
     uint256 volatility = 100_000_000e18; // big volatility
 
-    (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = signDataValid(
+    (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = TestUtils.signDataValid(
+      trustedRelayerPrivateKey,
       market2.collateralToken,
+      market2.loanToken,
+      pythia.RISKDATA_TYPEHASH(),
+      pythia.DOMAIN_SEPARATOR(),
       liquidity,
       volatility
     );
@@ -288,8 +262,12 @@ contract BProtocolMorphoAllocatorTest is Test {
     uint256 liquidity = 10_000_000e18; // big liquidity
     uint256 volatility = 0.01e18; // 1% volatility
 
-    (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = signDataValid(
+    (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = TestUtils.signDataValid(
+      trustedRelayerPrivateKey,
       market1.collateralToken,
+      market1.loanToken,
+      pythia.RISKDATA_TYPEHASH(),
+      pythia.DOMAIN_SEPARATOR(),
       liquidity,
       volatility
     );
@@ -338,8 +316,12 @@ contract BProtocolMorphoAllocatorTest is Test {
     uint256 liquidity = 1e18; // low liquidity
     uint256 volatility = 100_000_000e18; // big volatility
 
-    (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = signDataValid(
+    (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = TestUtils.signDataValid(
+      trustedRelayerPrivateKey,
       market2.collateralToken,
+      market2.loanToken,
+      pythia.RISKDATA_TYPEHASH(),
+      pythia.DOMAIN_SEPARATOR(),
       liquidity,
       volatility
     );
@@ -388,13 +370,16 @@ contract BProtocolMorphoAllocatorTest is Test {
       chainId: block.chainid // Current chain ID
     });
 
-    // these risk parameters should make the smartLTV returns 0% LTV
-    // so it should revert
+    // these risk parameters should make the smartLTV returns a valid ltv
     uint256 liquidity = 10_000_000_000e18; // big liquidity
     uint256 volatility = 0.01e18; // low volatility
 
-    (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = signDataValid(
+    (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = TestUtils.signDataValid(
+      trustedRelayerPrivateKey,
       market2.collateralToken,
+      market2.loanToken,
+      pythia.RISKDATA_TYPEHASH(),
+      pythia.DOMAIN_SEPARATOR(),
       liquidity,
       volatility
     );
