@@ -3,13 +3,9 @@ pragma solidity ^0.8.2;
 
 import "../../../lib/forge-std/src/Test.sol";
 import {Pythia} from "../../../src/core/Pythia.sol";
-
 import {SmartLTV} from "../../../src/core/SmartLTV.sol";
 import {RiskData} from "../../../src/interfaces/RiskData.sol";
-import {ECDSA} from "../../../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "../../../lib/openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
-import {Math} from "../../../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
-import {RiskyMath} from "../../../src/lib/RiskyMath.sol";
 import "../../../src/lib/ErrorLib.sol";
 import "../../mocks/MockMorpho.sol";
 import "../../mocks/MockMetaMorpho.sol";

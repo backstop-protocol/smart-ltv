@@ -4,7 +4,6 @@ pragma solidity ^0.8.2;
 import {Test} from "../../../lib/forge-std/src/Test.sol";
 import {Pythia} from "../../../src/core/Pythia.sol";
 import {RiskData} from "../../../src/interfaces/RiskData.sol";
-import {ECDSA} from "../../../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "../../../lib/openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
 
 /// @title Testing the Pythia Contract for Risk Data Signature Verification
