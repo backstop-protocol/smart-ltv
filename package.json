@@ -1,17 +1,15 @@
 {
-  "name": "morpho-allocator",
+  "name": "smart-ltv",
   "version": "1.0.0",
-  "description": "**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**",
-  "main": "soljson-v0.8.23+commit.f704f362.js",
+  "description": "Smart LTV is a project focused on optimizing loan-to-value calculations and risk management in decentralized finance. It integrates advanced algorithms for efficient market allocation.",
   "directories": {
     "lib": "lib",
     "test": "test"
   },
   "scripts": {
-    "test": "forge test",
     "test-unit": "forge test --match-path ./test/unit/**.sol",
+    "test-integration": "forge test --match-path './test/integration/**' --fork-url $GOERLI_RPC_URL -vvv",
     "coverage": "forge coverage --match-path './test/unit/**' --report summary --report lcov",
-    "test-goerli": "forge test --match-path './test/integration/**' --fork-url $GOERLI_RPC_URL -vvv",
     "build": "forge build",
     "prettier-format": "prettier --config .prettierrc \"./(src|test)/**/*.sol\" --write",
     "prettier-watch": "onchange \"(src|test)/**/*.sol\" -- prettier --write {{changed}}"

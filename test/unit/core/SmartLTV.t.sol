@@ -9,6 +9,7 @@ import {MessageHashUtils} from "../../../lib/openzeppelin-contracts/contracts/ut
 import {Math} from "../../../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 import {RiskyMath} from "../../../src/lib/RiskyMath.sol";
 import "../../../src/lib/ErrorLib.sol";
+import "../../TestUtils.sol";
 
 /// @title Testing the SmartLTV Contract for Loan-to-Value Calculation
 contract SmartLTVTest is Test {
@@ -61,36 +62,6 @@ contract SmartLTVTest is Test {
     console.log("divResult: %s", divResult);
     (, uint256 computedLTV) = Math.trySub(divResult, liquidationBonus);
     return computedLTV;
-  }
-
-  function signDataValid(
-    uint256 liquidity,
-    uint256 volatility
-  ) internal view returns (RiskData memory data, uint8 v, bytes32 r, bytes32 s) {
-    data = RiskData({
-      collateralAsset: collateralAddress,
-      debtAsset: debtAddress,
-      liquidity: liquidity,
-      volatility: volatility,
-      lastUpdate: block.timestamp - 3600, // 1 hour old data
-      chainId: block.chainid
-    });
-
-    // sign risk data
-    bytes32 structHash = keccak256(
-      abi.encode(
-        pythia.RISKDATA_TYPEHASH(),
-        data.collateralAsset,
-        data.debtAsset,
-        data.liquidity,
-        data.volatility,
-        data.lastUpdate,
-        data.chainId
-      )
-    );
-
-    bytes32 digest = MessageHashUtils.toTypedDataHash(pythia.DOMAIN_SEPARATOR(), structHash);
-    (v, r, s) = vm.sign(trustedRelayerPrivateKey, digest);
   }
 
   /// @notice Tests the initialization and correct setting of dependencies in the SmartLTV contract
@@ -385,8 +356,15 @@ contract SmartLTVTest is Test {
     uint256 testLtv = computeLtv(liquidity, volatility, cap, minCLF, liquidationBonus);
     vm.assume(testLtv > 0);
 
-    (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = signDataValid(liquidity, volatility);
-
+    (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = TestUtils.signDataValid(
+      trustedRelayerPrivateKey,
+      collateralAddress,
+      debtAddress,
+      pythia.RISKDATA_TYPEHASH(),
+      pythia.DOMAIN_SEPARATOR(),
+      liquidity,
+      volatility
+    );
     // Call the ltv function
     uint256 ltv = smartLTV.ltv(
       collateralAddress, // collateralAsset
@@ -412,7 +390,15 @@ contract SmartLTVTest is Test {
     uint256 liquidationBonus = 0.05e18; // 5% liquidation bonus
     uint256 minCLF = 3e18;
 
-    (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = signDataValid(liquidity, volatility);
+    (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = TestUtils.signDataValid(
+      trustedRelayerPrivateKey,
+      collateralAddress,
+      debtAddress,
+      pythia.RISKDATA_TYPEHASH(),
+      pythia.DOMAIN_SEPARATOR(),
+      liquidity,
+      volatility
+    );
     // Call the ltv function
     uint256 ltv = smartLTV.ltv(
       collateralAddress, // collateralAsset
@@ -440,7 +426,15 @@ contract SmartLTVTest is Test {
     uint256 minCLF = 4.9e18;
     uint256 liquidationBonus = 0.19e18; // 19% liquidation bonus
 
-    (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = signDataValid(liquidity, volatility);
+    (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = TestUtils.signDataValid(
+      trustedRelayerPrivateKey,
+      collateralAddress,
+      debtAddress,
+      pythia.RISKDATA_TYPEHASH(),
+      pythia.DOMAIN_SEPARATOR(),
+      liquidity,
+      volatility
+    );
     // Call the ltv function
     uint256 ltv = smartLTV.ltv(
       collateralAddress, // collateralAsset

@@ -24,10 +24,12 @@ type Id is bytes32;
 
 interface IMetaMorpho {
   function config(Id) external view returns (uint184 cap, bool enabled, uint64 removableAt);
-
   function reallocate(MarketAllocation[] calldata allocations) external;
-
   function MORPHO() external view returns (IMorpho);
+  function setIsAllocator(address newAllocator, bool newIsAllocator) external;
+  function owner() external returns (address);
+  function isAllocator(address target) external view returns (bool);
+  function totalAssets() external view returns (uint totalManagedAssets);
 }
 
 interface IMorpho {
@@ -57,6 +59,13 @@ interface IMorpho {
     Id id,
     address user
   ) external view returns (uint256 supplyShares, uint128 borrowShares, uint128 collateral);
+
+  /// @notice The market params corresponding to `id`.
+  /// @dev This mapping is not used in Morpho. It is there to enable reducing the cost associated to calldata on layer
+  /// 2s by creating a wrapper contract with functions that take `id` as input instead of `marketParams`.
+  function idToMarketParams(
+    Id id
+  ) external view returns (address loanToken, address collateralToken, address oracle, address irm, uint256 lltv);
 }
 
 uint256 constant MARKET_PARAMS_BYTES_LENGTH = 5 * 32;

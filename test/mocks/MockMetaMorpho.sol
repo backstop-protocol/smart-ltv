@@ -18,6 +18,21 @@ contract MockMetaMorpho is IMetaMorpho {
     MORPHO = _morpho;
   }
 
+  uint256 public totalAssets = 0;
+
+  function isAllocator(address target) external view returns (bool) {
+    console.log("%s is allocator", target);
+    return true;
+  }
+
+  function setIsAllocator(address newAllocator, bool newIsAllocator) external view {
+    console.log("new allocator %s to %s", newAllocator, newIsAllocator);
+  }
+
+  function owner() external pure returns (address) {
+    return address(1);
+  }
+
   function setConfig(Id id, ConfigData memory configData) external {
     configs[id] = configData;
   }

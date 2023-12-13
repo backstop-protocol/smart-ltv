@@ -32,6 +32,16 @@ contract MockMorpho is IMorpho {
     positionInfos[marketId][user] = positionInfo;
   }
 
+  function idToMarketParams(
+    Id /*id*/
+  ) external pure returns (address loanToken, address collateralToken, address oracle, address irm, uint256 lltv) {
+    loanToken = address(0);
+    collateralToken = address(0);
+    oracle = address(0);
+    irm = address(0);
+    lltv = 0;
+  }
+
   // Mock implementation of IMorpho interface methods
   function market(
     Id id
