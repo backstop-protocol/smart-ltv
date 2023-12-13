@@ -11,6 +11,9 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
   MarketParams marketParamSDAI;
   MarketParams marketParamUSDT;
 
+  mapping(Id => int256) vaultSupplyChange;
+  mapping(Id => int256) morphoMarketSupplyChange;
+
   function idToMarketParamsStruct(Id marketid) internal view returns (MarketParams memory) {
     (address loanToken, address collateralToken, address oracle, address irm, uint256 lltv) = morpho.idToMarketParams(
       marketid
@@ -19,12 +22,41 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
     return MarketParams({loanToken: loanToken, collateralToken: collateralToken, oracle: oracle, irm: irm, lltv: lltv});
   }
 
+  function computeMarketChange(Id marketId) internal {
+    int256 currentChange = vaultSupplyChange[marketId];
+    uint256 vaultSupply = getAssetSupplyForId(marketId);
+    if (currentChange == 0) {
+      vaultSupplyChange[marketId] = int256(vaultSupply);
+    } else {
+      vaultSupplyChange[marketId] = int256(vaultSupply) - currentChange;
+    }
+
+    int256 currentMorphoChange = morphoMarketSupplyChange[marketId];
+    (uint128 totalSupplyAssets, , , , , ) = morpho.market(marketId);
+    if (currentMorphoChange == 0) {
+      morphoMarketSupplyChange[marketId] = int256(int128(totalSupplyAssets));
+    } else {
+      morphoMarketSupplyChange[marketId] = int256(int128(totalSupplyAssets)) - currentMorphoChange;
+    }
+  }
+
   function getAssetSupplyForId(Id marketId) internal view returns (uint256) {
     (uint128 totalSupplyAssets, uint128 totalSupplyShares, , , , ) = morpho.market(marketId);
     (uint256 supplyShare, , ) = morpho.position(marketId, address(metaMorpho));
 
     uint256 currentVaultMarketSupply = MorphoLib.toAssetsDown(supplyShare, totalSupplyAssets, totalSupplyShares);
     return currentVaultMarketSupply;
+  }
+
+  // used to log without needing to declare variable
+  function logMetamorphoVaultSupply(Id marketId, string memory label) internal view {
+    console2.log("%s %s", label, getAssetSupplyForId(marketId));
+  }
+
+  // used to log without needing to declare variable
+  function logMorphoMarketSupply(Id marketId, string memory label) internal view {
+    (uint128 totalSupplyAssets, , , , , ) = morpho.market(marketId);
+    console2.log("%s %s", label, totalSupplyAssets);
   }
 
   function setUp() public override {
@@ -44,16 +76,16 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
   }
 
   function testReallocateToMarketUSDT() public {
-    // get the total number of asset of our vault
-    uint256 vaultTotalAssets = metaMorpho.totalAssets();
-    console.log("vault total assets: %s", vaultTotalAssets);
+    // get and log morpho blue markets
+    computeMarketChange(marketIdSDAI);
+    computeMarketChange(marketIdUSDT);
+
     // get the number of asset in the sdai market
     uint256 sDaiSupplyBefore = getAssetSupplyForId(marketIdSDAI);
-    console.log("sDaiSupplyBefore: %s", sDaiSupplyBefore);
+    console2.log("sDAI supply before: %s", sDaiSupplyBefore);
 
     // get the number of assets in the usdt market
-    uint256 usdtSupplyBefore = getAssetSupplyForId(marketIdUSDT);
-    console.log("usdtSupplyBefore: %s", usdtSupplyBefore);
+    logMetamorphoVaultSupply(marketIdUSDT, "USDT supply before:");
 
     // rebalance to withdraw from sdai market
     // to do that we need to create 2 allocations (and the same amount of risk data and signature)
@@ -62,15 +94,13 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
     Signature[] memory signatures = new Signature[](2);
 
     // first allocation is the withdraw from the sdai parameter
-    // here we want to divide by 2 the current supply
     uint256 targetSdaiSupply = sDaiSupplyBefore / 2;
-    console.log("targetSdaiSupply: %s", targetSdaiSupply);
+    console2.log("targetSdaiSupply: %s", targetSdaiSupply);
     allocations[0] = MarketAllocation({marketParams: marketParamSDAI, assets: targetSdaiSupply});
     // second allocation is the supply to the usdt market
-    uint256 targetUsdtSupply = 1000e6; // 1000 USDC supply
-    console.log("targetUsdtSupply: %s", targetUsdtSupply);
+    uint256 targetUsdtSupply = type(uint256).max;
+    console2.log("targetUsdtSupply: %s", targetUsdtSupply);
     allocations[1] = MarketAllocation({marketParams: marketParamUSDT, assets: targetUsdtSupply});
-
     // the risk data for the first allocation is useless because it's a withdraw
     riskDatas[0] = RiskData({
       collateralAsset: address(1), // Example address
@@ -107,5 +137,25 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
     signatures[1] = Signature({v: v, r: r, s: s});
 
     morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures);
+
+    computeMarketChange(marketIdSDAI);
+    computeMarketChange(marketIdUSDT);
+
+    // get the number of asset in the sdai market
+    logMetamorphoVaultSupply(marketIdSDAI, "sDAI supply after:");
+    logMetamorphoVaultSupply(marketIdUSDT, "USDT supply after:");
+
+    // the vault supply change for the sDAI market should be negative
+    assertLt(vaultSupplyChange[marketIdSDAI], 0);
+    // same for the global morpho blue market
+    assertLt(morphoMarketSupplyChange[marketIdSDAI], 0);
+    console2.log("sDAI vault supply change: %s", vaultSupplyChange[marketIdSDAI]);
+    console2.log("sDAI market supply change: %s", morphoMarketSupplyChange[marketIdSDAI]);
+
+    // while the USDT market should have increased
+    assertGt(vaultSupplyChange[marketIdUSDT], 0);
+    assertGt(morphoMarketSupplyChange[marketIdUSDT], 0);
+    console2.log("USDT vault supply change: %s", vaultSupplyChange[marketIdUSDT]);
+    console2.log("USDT market supply change: %s", morphoMarketSupplyChange[marketIdUSDT]);
   }
 }
