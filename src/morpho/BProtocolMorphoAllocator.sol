@@ -80,6 +80,10 @@ contract BProtocolMorphoAllocator {
     METAMORPHO_VAULT.reallocate(allocations);
   }
 
+  /// @notice Internal function to check an individual allocation's risk and compliance.
+  /// @param allocation The market allocation to be checked.
+  /// @param riskData The risk data associated with the allocation.
+  /// @param signature The signature for verification.
   function _checkAllocation(
     MarketAllocation memory allocation,
     RiskData memory riskData,
@@ -103,6 +107,12 @@ contract BProtocolMorphoAllocator {
     }
   }
 
+  /// @notice Determines if an allocation is a withdrawal based on market ID and asset amounts.
+  /// @param marketId The market ID.
+  /// @param allocationAssets The amount of assets allocated.
+  /// @param totalSupplyAsset The total supply of assets in the market.
+  /// @param totalSupplyShares The total supply shares in the market.
+  /// @return isWithdraw True if the operation is a withdrawal.
   function _isWithdraw(
     Id marketId,
     uint256 allocationAssets,
@@ -121,6 +131,12 @@ contract BProtocolMorphoAllocator {
     isWithdraw = allocationAssets < currentVaultMarketSupply;
   }
 
+  /// @notice Retrieves the current supply of assets for a specific market in the vault.
+  /// @param marketId The market ID.
+  /// @param totalSupplyAssets The total supply of assets in the market.
+  /// @param totalSupplyShares The total supply shares in the market.
+  /// @dev this does not call the accrue interest function, maybe we should do it
+  /// @return currentVaultMarketSupply The current asset supply for the specified market.
   function _getVaultMarketSupply(
     Id marketId,
     uint128 totalSupplyAssets,
@@ -132,6 +148,11 @@ contract BProtocolMorphoAllocator {
     return currentVaultMarketSupply;
   }
 
+  /// @notice Retrieves the current cap for a specific market.
+  /// @dev the current cap is defined as being the max between the metamorpho cap and the morpho blue market current total supply
+  /// @param marketId The market ID.
+  /// @param totalSupplyAsset The total supply of assets in the market.
+  /// @return d The current cap for the market.
   function _getCurrentCap(Id marketId, uint256 totalSupplyAsset) private view returns (uint256 d) {
     (uint184 cap, , ) = METAMORPHO_VAULT.config(marketId);
     // the cap d is the max between vault cap and total supply asset of the morpho market
@@ -172,6 +193,9 @@ contract BProtocolMorphoAllocator {
     }
   }
 
+  /// @notice Calculates the liquidation incentives based on market LTV.
+  /// @param marketParamsLLTV The LTV parameter of the market.
+  /// @return The calculated liquidation incentives.
   function _getLiquidationIncentives(uint256 marketParamsLLTV) private pure returns (uint256) {
     // The liquidation incentive factor is min(maxLiquidationIncentiveFactor, 1/(1 - cursor*(1 - lltv))).
     uint256 computedLiquidationIncentives = WAD.wDivDown(WAD - LIQUIDATION_CURSOR.wMulDown(WAD - marketParamsLLTV)) -
