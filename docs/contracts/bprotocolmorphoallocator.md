@@ -6,14 +6,14 @@
 
 ## Features
 
-- **Market Allocation Management**: Handles the reallocation of assets across different markets.
+- **Market Allocation Management**: Handles the reallocation of assets across different morpho markets.
 - **Risk Assessment**: Integrates risk data checks to ensure safe allocation based on market conditions.
 
 ## Immutable Variables
 
 - `SMART_LTV`: Reference to the SmartLTV contract for LTV calculations.
 - `METAMORPHO_VAULT`: Address of the MetaMorpho Vault contract for market reallocations.
-- `MIN_CLF`: Immutable variable representing the minimum collateralization liquidation factor.
+- `MIN_CLF`: Immutable variable representing the minimum confidence level factor
 
 ## Constructor
 
@@ -39,4 +39,4 @@ function checkAndReallocate(
 
 ## Usage
 
-The BProtocolMorphoAllocator contract is used to automate and optimize the allocation of assets in DeFi platforms, ensuring that each allocation complies with the predefined risk parameters and market conditions.
+The BProtocolMorphoAllocator contract is used to automate and optimize the allocation of assets in the Morpho Blue platform, ensuring that each allocation complies with the predefined risk parameters and market conditions.
