@@ -24,6 +24,7 @@ contract MorphoFixture is Test {
 
   uint256 trustedRelayerPrivateKey = 0x42;
   address trustedRelayerAddress = vm.addr(trustedRelayerPrivateKey);
+  address allocatorOwner = address(101);
 
   // fake function so that does not show up in the coverage report
   function test() public {}
@@ -32,7 +33,7 @@ contract MorphoFixture is Test {
     // create pythia, smartLTV and BProtocolMorphoAllocator contract
     pythia = new Pythia();
     smartLTV = new SmartLTV(pythia, trustedRelayerAddress);
-    morphoAllocator = new BProtocolMorphoAllocator(smartLTV, address(metaMorpho));
+    morphoAllocator = new BProtocolMorphoAllocator(smartLTV, address(metaMorpho), allocatorOwner);
 
     // gives the allocator role to the BProtocolMorphoAllocator contract
     address ownerAddress = metaMorpho.owner();
