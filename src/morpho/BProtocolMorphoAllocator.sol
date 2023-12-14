@@ -7,6 +7,7 @@ import {IMetaMorpho, MarketAllocation, Id, MarketParams, IMorpho, MathLib, WAD, 
 import {RiskyMath} from "../lib/RiskyMath.sol";
 import {MorphoLib} from "../external/Morpho.sol";
 import {ErrorLib} from "../lib/ErrorLib.sol";
+import "../../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 
 /*  
 USDC/sDAI
@@ -34,7 +35,7 @@ marketid: 0xbc6d1789e6ba66e5cd277af475c5ed77fcf8b084347809d9d92e400ebacbdd10
 ///         It needs to have the Allocator role in the MetaMorpho vault
 /// @dev The contract uses immutable state variables for SmartLTV, trusted relayer, and MetaMorpho Vault addresses.
 ///      It includes functionality to check allocation risks and perform reallocation based on these assessments.
-contract BProtocolMorphoAllocator {
+contract BProtocolMorphoAllocator is Ownable {
   using MathLib for uint256;
 
   /// @notice The SmartLTV contract used for loan-to-value calculations
@@ -46,7 +47,7 @@ contract BProtocolMorphoAllocator {
   /// @notice A predefined constant representing the minimum confidence level factor
   uint256 public immutable MIN_CLF = 3e18;
 
-  constructor(SmartLTV smartLTV, address morphoVaultAddress) {
+  constructor(SmartLTV smartLTV, address morphoVaultAddress, address initialOwner) Ownable(initialOwner) {
     SMART_LTV = smartLTV;
     METAMORPHO_VAULT = IMetaMorpho(morphoVaultAddress);
   }
@@ -63,7 +64,7 @@ contract BProtocolMorphoAllocator {
     MarketAllocation[] calldata allocations,
     RiskData[] calldata riskDatas,
     Signature[] calldata signatures
-  ) external {
+  ) external onlyOwner {
     if (allocations.length != riskDatas.length) {
       revert ErrorLib.INVALID_RISK_DATA_COUNT(allocations.length, riskDatas.length);
     }
