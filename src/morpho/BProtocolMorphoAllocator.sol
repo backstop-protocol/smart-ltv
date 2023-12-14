@@ -43,7 +43,7 @@ contract BProtocolMorphoAllocator {
   /// @notice The MetaMorpho Vault contract address for market allocations
   IMetaMorpho public immutable METAMORPHO_VAULT;
 
-  /// @notice A predefined constant representing the minimum collateralization liquidation factor
+  /// @notice A predefined constant representing the minimum confidence level factor
   uint256 public immutable MIN_CLF = 3e18;
 
   constructor(SmartLTV smartLTV, address morphoVaultAddress) {
