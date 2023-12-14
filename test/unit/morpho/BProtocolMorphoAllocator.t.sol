@@ -30,6 +30,7 @@ contract BProtocolMorphoAllocatorTest is Test {
   address collateralAddress1 = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
   address collateralAddress2 = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
   address debtAddress = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
+  address allocatorOwner = address(101);
 
   MarketParams market1 =
     MarketParams({
@@ -90,7 +91,7 @@ contract BProtocolMorphoAllocatorTest is Test {
     smartLTV = new SmartLTV(pythia, trustedRelayerAddress);
     setupMorphoMock();
     setupMetaMorphoMock(IMorpho(mockMorpho));
-    morphoAllocator = new BProtocolMorphoAllocator(smartLTV, address(mockMetaMorpho));
+    morphoAllocator = new BProtocolMorphoAllocator(smartLTV, address(mockMetaMorpho), allocatorOwner);
 
     // warp to a known block and timestamp
     vm.warp(1679067867);
@@ -102,6 +103,11 @@ contract BProtocolMorphoAllocatorTest is Test {
     assertEq(address(morphoAllocator.SMART_LTV()), address(smartLTV));
     assertEq(address(morphoAllocator.METAMORPHO_VAULT()), address(mockMetaMorpho));
     assertGt(morphoAllocator.MIN_CLF(), uint256(0));
+  }
+
+  function testRevertIfNotOwner() public {
+    vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
+    morphoAllocator.checkAndReallocate(new MarketAllocation[](0), new RiskData[](0), new Signature[](0));
   }
 
   /// @notice Tests the checkAndReallocate function with mismatched lengths of the allocations
@@ -135,7 +141,7 @@ contract BProtocolMorphoAllocatorTest is Test {
     vm.expectRevert(
       abi.encodeWithSelector(ErrorLib.INVALID_RISK_DATA_COUNT.selector, allocations.length, riskDatas.length)
     );
-
+    vm.prank(allocatorOwner);
     morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures);
   }
 
@@ -172,6 +178,7 @@ contract BProtocolMorphoAllocatorTest is Test {
       abi.encodeWithSelector(ErrorLib.INVALID_SIGNATURE_COUNT.selector, riskDatas.length, signatures.length)
     );
 
+    vm.prank(allocatorOwner);
     morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures);
   }
 
@@ -206,6 +213,7 @@ contract BProtocolMorphoAllocatorTest is Test {
       s: bytes32(0) // Example value
     });
 
+    vm.prank(allocatorOwner);
     morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures);
   }
 
@@ -240,6 +248,7 @@ contract BProtocolMorphoAllocatorTest is Test {
       s: bytes32(0) // Example value
     });
 
+    vm.prank(allocatorOwner);
     morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures);
   }
 
@@ -277,6 +286,7 @@ contract BProtocolMorphoAllocatorTest is Test {
     signatures[0] = Signature({v: v, r: r, s: s});
 
     vm.expectRevert(abi.encodeWithSelector(ErrorLib.LTV_TOO_HIGH.selector, market2.lltv, uint256(0)));
+    vm.prank(allocatorOwner);
     morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures);
   }
 
@@ -313,6 +323,7 @@ contract BProtocolMorphoAllocatorTest is Test {
     signatures[0] = Signature({v: v, r: r, s: s});
 
     // vm.expectRevert(abi.encodeWithSelector(ErrorLib.LTV_TOO_HIGH.selector, market2.lltv, uint256(0)));
+    vm.prank(allocatorOwner);
     morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures);
   }
 
@@ -372,6 +383,7 @@ contract BProtocolMorphoAllocatorTest is Test {
     signatures[1] = Signature({v: v, r: r, s: s});
 
     vm.expectRevert(abi.encodeWithSelector(ErrorLib.LTV_TOO_HIGH.selector, market2.lltv, uint256(0)));
+    vm.prank(allocatorOwner);
     morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures);
   }
 
@@ -429,6 +441,7 @@ contract BProtocolMorphoAllocatorTest is Test {
 
     signatures[1] = Signature({v: v, r: r, s: s});
 
+    vm.prank(allocatorOwner);
     morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures);
   }
 }

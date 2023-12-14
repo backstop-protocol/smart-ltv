@@ -123,6 +123,7 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
     RiskData[] memory riskDatas = new RiskData[](2);
     Signature[] memory signatures = new Signature[](2);
 
+    // divide the current sdai allocation by a factor of 2 to 100
     // first allocation is the withdraw from the sdai parameter
     uint256 targetSdaiSupply = sDaiSupplyBefore / 2;
     console2.log("targetSdaiSupply: %s", targetSdaiSupply);
@@ -166,6 +167,7 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
 
     signatures[1] = Signature({v: v, r: r, s: s});
 
+    vm.prank(allocatorOwner);
     morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures);
 
     computeMarketChange(marketIdSDAI);
@@ -239,6 +241,7 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
     signatures[1] = signatures[0];
     signatures[2] = signatures[0];
 
+    vm.prank(allocatorOwner);
     morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures);
 
     computeMarketChange(marketIdSDAI);
