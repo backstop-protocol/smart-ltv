@@ -105,7 +105,7 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
 
   /// @notice Tests the reallocation process for the USDT market.
   /// @dev Simulates rebalancing between SDAI and USDT markets and checks supply changes.
-  function testReallocateToMarketUSDT() public {
+  function testReallocateToMarketUSDT(uint256 removeFromSdaiSeed) public {
     // get and log morpho blue markets
     computeMarketChange(marketIdSDAI);
     computeMarketChange(marketIdUSDT);
@@ -123,8 +123,10 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
     RiskData[] memory riskDatas = new RiskData[](2);
     Signature[] memory signatures = new Signature[](2);
 
+    // divide the current sdai allocation by a factor of 2 to 100
+    uint256 sDaiDividingFactor = bound(removeFromSdaiSeed, 2, 100);
     // first allocation is the withdraw from the sdai parameter
-    uint256 targetSdaiSupply = sDaiSupplyBefore / 2;
+    uint256 targetSdaiSupply = sDaiSupplyBefore / sDaiDividingFactor;
     console2.log("targetSdaiSupply: %s", targetSdaiSupply);
     allocations[0] = MarketAllocation({marketParams: marketParamSDAI, assets: targetSdaiSupply});
     // second allocation is the supply to the usdt market
