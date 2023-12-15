@@ -5,10 +5,10 @@ import {RiskData, Signature} from "../interfaces/RiskData.sol";
 import {SmartLTV} from "../core/SmartLTV.sol";
 import {RiskyMath} from "../lib/RiskyMath.sol";
 import {ErrorLib} from "../lib/ErrorLib.sol";
-import "../../lib/metamorpho/src/interfaces/IMetaMorpho.sol";
+import {IMetaMorpho, MarketAllocation, Id} from "../../lib/metamorpho/src/interfaces/IMetaMorpho.sol";
 import "../../lib/morpho-blue/src/libraries/MathLib.sol";
 import "../../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
-import {MarketParamsLib} from "../../lib/morpho-blue/src/libraries/MarketParamsLib.sol";
+import {MarketParamsLib, MarketParams} from "../../lib/morpho-blue/src/libraries/MarketParamsLib.sol";
 import "../../lib/morpho-blue/src/libraries/ConstantsLib.sol";
 
 /// @title BProtocol Morpho Allocator Contract

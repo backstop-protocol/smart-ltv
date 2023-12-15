@@ -6,7 +6,7 @@ import "../../lib/metamorpho/src/interfaces/IMetaMorpho.sol";
 
 import "../../src/core/Pythia.sol";
 import "../../src/core/SmartLTV.sol";
-import "../../src/morpho/BProtocolMorphoAllocator.sol";
+import {BProtocolMorphoAllocator} from "../../src/morpho/BProtocolMorphoAllocator.sol";
 
 /*  
 USDC/sDAI

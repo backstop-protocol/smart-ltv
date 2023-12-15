@@ -25,8 +25,137 @@ contract MockMorpho is IMorpho {
     return marketInfos[id];
   }
 
-  function idToMarketParams(Id id) external view returns (MarketParams memory) {
-    return
-      MarketParams({loanToken: address(0), collateralToken: address(0), oracle: address(0), irm: address(0), lltv: 0});
+  function idToMarketParams(Id) external view override returns (MarketParams memory) {
+    return MarketParams(address(0), address(0), address(0), address(0), 0); // Placeholder value
+  }
+
+  function DOMAIN_SEPARATOR() external view override returns (bytes32) {
+    return bytes32(0); // Placeholder value
+  }
+
+  function owner() external view override returns (address) {
+    return address(0); // Placeholder value
+  }
+
+  function feeRecipient() external view override returns (address) {
+    return address(0); // Placeholder value
+  }
+
+  function isIrmEnabled(address) external view override returns (bool) {
+    return false; // Placeholder value
+  }
+
+  function isLltvEnabled(uint256) external view override returns (bool) {
+    return false; // Placeholder value
+  }
+
+  function isAuthorized(address, address) external view override returns (bool) {
+    return false; // Placeholder value
+  }
+
+  function nonce(address) external view override returns (uint256) {
+    return uint256(0); // Placeholder value
+  }
+
+  function setOwner(address) external override {
+    // Placeholder body
+  }
+
+  function enableIrm(address) external override {
+    // Placeholder body
+  }
+
+  function enableLltv(uint256) external override {
+    // Placeholder body
+  }
+
+  function setFee(MarketParams memory, uint256) external override {
+    // Placeholder body
+  }
+
+  function setFeeRecipient(address) external override {
+    // Placeholder body
+  }
+
+  function createMarket(MarketParams memory) external override {
+    // Placeholder body
+  }
+
+  function supply(
+    MarketParams memory,
+    uint256,
+    uint256,
+    address,
+    bytes memory
+  ) external override returns (uint256, uint256) {
+    return (uint256(0), uint256(0)); // Placeholder values
+  }
+
+  function withdraw(
+    MarketParams memory,
+    uint256,
+    uint256,
+    address,
+    address
+  ) external override returns (uint256, uint256) {
+    return (uint256(0), uint256(0)); // Placeholder values
+  }
+
+  function borrow(
+    MarketParams memory,
+    uint256,
+    uint256,
+    address,
+    address
+  ) external override returns (uint256, uint256) {
+    return (uint256(0), uint256(0)); // Placeholder values
+  }
+
+  function repay(
+    MarketParams memory,
+    uint256,
+    uint256,
+    address,
+    bytes memory
+  ) external override returns (uint256, uint256) {
+    return (uint256(0), uint256(0)); // Placeholder values
+  }
+
+  function supplyCollateral(MarketParams memory, uint256, address, bytes memory) external override {
+    // Placeholder body
+  }
+
+  function withdrawCollateral(MarketParams memory, uint256, address, address) external override {
+    // Placeholder body
+  }
+
+  function liquidate(
+    MarketParams memory,
+    address,
+    uint256,
+    uint256,
+    bytes memory
+  ) external override returns (uint256, uint256) {
+    return (uint256(0), uint256(0)); // Placeholder values
+  }
+
+  function flashLoan(address, uint256, bytes calldata) external override {
+    // Placeholder body
+  }
+
+  function setAuthorization(address, bool) external override {
+    // Placeholder body
+  }
+
+  function setAuthorizationWithSig(Authorization calldata, Signature calldata) external override {
+    // Placeholder body
+  }
+
+  function accrueInterest(MarketParams memory) external override {
+    // Placeholder body
+  }
+
+  function extSloads(bytes32[] memory) external view override returns (bytes32[] memory) {
+    return new bytes32[](0); // Placeholder value
   }
 }
