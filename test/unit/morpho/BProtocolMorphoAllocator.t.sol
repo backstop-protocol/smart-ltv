@@ -10,8 +10,8 @@ import "../../../src/lib/ErrorLib.sol";
 import {MockMorpho} from "../../mocks/MockMorpho.sol";
 import {MockMetaMorpho} from "../../mocks/MockMetaMorpho.sol";
 import "../../../lib/metamorpho/src/interfaces/IMetaMorpho.sol";
-import {MarketParamsLib} from "../../../lib/morpho-blue/src/libraries/MarketParamsLib.sol";
-import {Market, Position} from "../../../lib/morpho-blue/src/interfaces/IMorpho.sol";
+import {MarketParamsLib} from "../../../lib/metamorpho/lib/morpho-blue/src/libraries/MarketParamsLib.sol";
+import {Market, Position} from "../../../lib/metamorpho/lib/morpho-blue/src/interfaces/IMorpho.sol";
 import {BProtocolMorphoAllocator, Ownable} from "../../../src/morpho/BProtocolMorphoAllocator.sol";
 import "../../TestUtils.sol";
 

@@ -12,7 +12,7 @@ contract MockMetaMorpho is IMetaMorpho {
     MORPHO = _morpho;
   }
 
-  function isAllocator(address target) external view returns (bool) {
+  function isAllocator(address /*target*/) external pure returns (bool) {
     return true;
   }
 
@@ -28,47 +28,47 @@ contract MockMetaMorpho is IMetaMorpho {
     return configs[id];
   }
 
-  function curator() external view override returns (address) {
+  function curator() external pure override returns (address) {
     return address(0); // Placeholder value
   }
 
-  function guardian() external view override returns (address) {
+  function guardian() external pure override returns (address) {
     return address(0); // Placeholder value
   }
 
-  function fee() external view override returns (uint96) {
+  function fee() external pure override returns (uint96) {
     return uint96(0); // Placeholder value
   }
 
-  function feeRecipient() external view override returns (address) {
+  function feeRecipient() external pure override returns (address) {
     return address(0); // Placeholder value
   }
 
-  function skimRecipient() external view override returns (address) {
+  function skimRecipient() external pure override returns (address) {
     return address(0); // Placeholder value
   }
 
-  function timelock() external view override returns (uint256) {
+  function timelock() external pure override returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
-  function supplyQueue(uint256) external view override returns (Id) {
-    return Id(0); // Placeholder value
+  function supplyQueue(uint256) external pure override returns (Id) {
+    return Id.wrap(bytes32(0)); // Placeholder value
   }
 
-  function supplyQueueLength() external view override returns (uint256) {
+  function supplyQueueLength() external pure override returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
-  function withdrawQueue(uint256) external view override returns (Id) {
-    return Id(0); // Placeholder value
+  function withdrawQueue(uint256) external pure override returns (Id) {
+    return Id.wrap(bytes32(0)); // Placeholder value
   }
 
-  function withdrawQueueLength() external view override returns (uint256) {
+  function withdrawQueueLength() external pure override returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
-  function lastTotalAssets() external view override returns (uint256) {
+  function lastTotalAssets() external pure override returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
@@ -154,39 +154,39 @@ contract MockMetaMorpho is IMetaMorpho {
   }
 
   // Implementations of IERC4626 methods
-  function totalAssets() external view override returns (uint256) {
+  function totalAssets() external pure override returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
-  function convertToShares(uint256) external view override returns (uint256) {
+  function convertToShares(uint256) external pure override returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
-  function convertToAssets(uint256) external view override returns (uint256) {
+  function convertToAssets(uint256) external pure override returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
-  function maxDeposit(address) external view override returns (uint256) {
+  function maxDeposit(address) external pure override returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
-  function previewDeposit(uint256) external view override returns (uint256) {
+  function previewDeposit(uint256) external pure override returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
-  function deposit(uint256, address) external override returns (uint256) {
+  function deposit(uint256, address) external pure override returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
-  function maxWithdraw(address) external view override returns (uint256) {
+  function maxWithdraw(address) external pure override returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
-  function previewWithdraw(uint256) external view override returns (uint256) {
+  function previewWithdraw(uint256) external pure override returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
-  function withdraw(uint256, address, address) external override returns (uint256) {
+  function withdraw(uint256, address, address) external pure override returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
@@ -207,96 +207,96 @@ contract MockMetaMorpho is IMetaMorpho {
     // Placeholder body
   }
 
-  function pendingOwner() external view override returns (address) {
+  function pendingOwner() external pure override returns (address) {
     return address(0); // Placeholder value
   }
 
   // Implementations of IMulticall methods
-  function multicall(bytes[] calldata) external override returns (bytes[] memory) {
+  function multicall(bytes[] calldata) external pure override returns (bytes[] memory) {
     return new bytes[](0); // Placeholder value
   }
 
-  function pendingGuardian() external view override returns (PendingAddress memory) {
+  function pendingGuardian() external pure override returns (PendingAddress memory) {
     return PendingAddress(address(0), 0); // Placeholder value
   }
 
-  function pendingCap(Id) external view override returns (PendingUint192 memory) {
+  function pendingCap(Id) external pure override returns (PendingUint192 memory) {
     return PendingUint192(0, 0); // Placeholder value
   }
 
-  function pendingTimelock() external view override returns (PendingUint192 memory) {
+  function pendingTimelock() external pure override returns (PendingUint192 memory) {
     return PendingUint192(0, 0); // Placeholder value
   }
 
-  function DOMAIN_SEPARATOR() external view returns (bytes32) {
+  function DOMAIN_SEPARATOR() external pure returns (bytes32) {
     return bytes32(0); // Placeholder value
   }
 
-  function allowance(address, address) external view returns (uint256) {
+  function allowance(address, address) external pure returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
-  function approve(address, uint256) external returns (bool) {
+  function approve(address, uint256) external pure returns (bool) {
     return true; // Placeholder value
   }
 
-  function asset() external view returns (address assetTokenAddress) {
+  function asset() external pure returns (address assetTokenAddress) {
     return address(0); // Placeholder value
   }
 
-  function balanceOf(address) external view returns (uint256) {
+  function balanceOf(address) external pure returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
-  function decimals() external view returns (uint8) {
+  function decimals() external pure returns (uint8) {
     return uint8(0); // Placeholder value
   }
 
-  function maxMint(address) external view returns (uint256 maxShares) {
+  function maxMint(address) external pure returns (uint256 maxShares) {
     return uint256(0); // Placeholder value
   }
 
-  function maxRedeem(address) external view returns (uint256 maxShares) {
+  function maxRedeem(address) external pure returns (uint256 maxShares) {
     return uint256(0); // Placeholder value
   }
 
-  function mint(uint256, address) external returns (uint256 assets) {
+  function mint(uint256, address) external pure returns (uint256 assets) {
     return uint256(0); // Placeholder value
   }
 
-  function name() external view returns (string memory) {
+  function name() external pure returns (string memory) {
     return ""; // Placeholder value
   }
 
-  function nonces(address) external view returns (uint256) {
+  function nonces(address) external pure returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
-  function previewMint(uint256) external view returns (uint256 assets) {
+  function previewMint(uint256) external pure returns (uint256 assets) {
     return uint256(0); // Placeholder value
   }
 
-  function previewRedeem(uint256) external view returns (uint256 assets) {
+  function previewRedeem(uint256) external pure returns (uint256 assets) {
     return uint256(0); // Placeholder value
   }
 
-  function redeem(uint256, address, address) external returns (uint256 assets) {
+  function redeem(uint256, address, address) external pure returns (uint256 assets) {
     return uint256(0); // Placeholder value
   }
 
-  function symbol() external view returns (string memory) {
+  function symbol() external pure returns (string memory) {
     return ""; // Placeholder value
   }
 
-  function totalSupply() external view returns (uint256) {
+  function totalSupply() external pure returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
-  function transfer(address, uint256) external returns (bool) {
+  function transfer(address, uint256) external pure returns (bool) {
     return true; // Placeholder value
   }
 
-  function transferFrom(address, address, uint256) external returns (bool) {
+  function transferFrom(address, address, uint256) external pure returns (bool) {
     return true; // Placeholder value
   }
 }

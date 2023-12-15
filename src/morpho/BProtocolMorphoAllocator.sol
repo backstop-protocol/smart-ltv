@@ -5,11 +5,13 @@ import {RiskData, Signature} from "../interfaces/RiskData.sol";
 import {SmartLTV} from "../core/SmartLTV.sol";
 import {RiskyMath} from "../lib/RiskyMath.sol";
 import {ErrorLib} from "../lib/ErrorLib.sol";
-import {IMetaMorpho, MarketAllocation, Id} from "../../lib/metamorpho/src/interfaces/IMetaMorpho.sol";
-import "../../lib/morpho-blue/src/libraries/MathLib.sol";
+import {IMetaMorpho, MarketAllocation, Id, MarketConfig} from "../../lib/metamorpho/src/interfaces/IMetaMorpho.sol";
+import {MathLib, WAD} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/MathLib.sol";
+import {SharesMathLib} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/SharesMathLib.sol";
+import {Market, Position} from "../../lib/metamorpho/lib/morpho-blue/src/interfaces/IMorpho.sol";
 import "../../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
-import {MarketParamsLib, MarketParams} from "../../lib/morpho-blue/src/libraries/MarketParamsLib.sol";
-import "../../lib/morpho-blue/src/libraries/ConstantsLib.sol";
+import {MarketParamsLib, MarketParams} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/MarketParamsLib.sol";
+import "../../lib/metamorpho/lib/morpho-blue/src/libraries/ConstantsLib.sol";
 
 /// @title BProtocol Morpho Allocator Contract
 /// @author bprotocol, la-tribu.xyz
@@ -77,15 +79,15 @@ contract BProtocolMorphoAllocator is Ownable {
     Id marketId = MarketParamsLib.id(allocation.marketParams);
 
     // get the market infos from morpho blue contract
-    (uint128 totalSupplyAssets, uint128 totalSupplyShares, , , , ) = METAMORPHO_VAULT.MORPHO().market(marketId);
+    Market memory m = METAMORPHO_VAULT.MORPHO().market(marketId);
 
     if (allocation.marketParams.collateralToken != address(0)) {
       // only check risk if collateral is not address(0)
       // address(0) for collateral means it's an idle market ==> without risks
-      if (!_isWithdraw(marketId, allocation.assets, totalSupplyAssets, totalSupplyShares)) {
+      if (!_isWithdraw(marketId, allocation.assets, m.totalSupplyAssets, m.totalSupplyShares)) {
         // only check risk if not withdraw
         // because we want to allow withdraw for a risky market
-        uint256 currentCap = _getCurrentCap(marketId, totalSupplyAssets);
+        uint256 currentCap = _getCurrentCap(marketId, m.totalSupplyAssets);
         _checkAllocationRisk(currentCap, allocation.marketParams.lltv, riskData, signature);
       }
     }
@@ -126,9 +128,9 @@ contract BProtocolMorphoAllocator is Ownable {
     uint128 totalSupplyAssets,
     uint128 totalSupplyShares
   ) internal view returns (uint256) {
-    (uint256 supplyShare, , ) = METAMORPHO_VAULT.MORPHO().position(marketId, address(METAMORPHO_VAULT));
+    Position memory p = METAMORPHO_VAULT.MORPHO().position(marketId, address(METAMORPHO_VAULT));
 
-    uint256 currentVaultMarketSupply = MathLib.toAssetsDown(supplyShare, totalSupplyAssets, totalSupplyShares);
+    uint256 currentVaultMarketSupply = SharesMathLib.toAssetsDown(p.supplyShares, totalSupplyAssets, totalSupplyShares);
     return currentVaultMarketSupply;
   }
 
@@ -138,9 +140,9 @@ contract BProtocolMorphoAllocator is Ownable {
   /// @param totalSupplyAsset The total supply of assets in the market.
   /// @return d The current cap for the market.
   function _getCurrentCap(Id marketId, uint256 totalSupplyAsset) private view returns (uint256 d) {
-    (uint184 cap, , ) = METAMORPHO_VAULT.config(marketId);
+    MarketConfig memory config = METAMORPHO_VAULT.config(marketId);
     // the cap d is the max between vault cap and total supply asset of the morpho market
-    d = cap >= totalSupplyAsset ? cap : totalSupplyAsset; // supplyCap
+    d = config.cap >= totalSupplyAsset ? config.cap : totalSupplyAsset; // supplyCap
   }
 
   /// @notice Checks the allocation risk based on market configuration and provided risk data.

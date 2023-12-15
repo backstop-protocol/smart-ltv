@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
-import "../../lib/morpho-blue/src/interfaces/IMorpho.sol";
+import "../../lib/metamorpho/lib/morpho-blue/src/interfaces/IMorpho.sol";
 
 contract MockMorpho is IMorpho {
   // Mock state variables
@@ -13,7 +13,7 @@ contract MockMorpho is IMorpho {
     marketInfos[marketId] = marketInfo;
   }
 
-  function setPositionInfo(Id marketId, address user, Position memory positionInfo) external {
+  function setPosition(Id marketId, address user, Position memory positionInfo) external {
     positionInfos[marketId][user] = positionInfo;
   }
 
@@ -25,35 +25,35 @@ contract MockMorpho is IMorpho {
     return marketInfos[id];
   }
 
-  function idToMarketParams(Id) external view override returns (MarketParams memory) {
+  function idToMarketParams(Id) external pure override returns (MarketParams memory) {
     return MarketParams(address(0), address(0), address(0), address(0), 0); // Placeholder value
   }
 
-  function DOMAIN_SEPARATOR() external view override returns (bytes32) {
+  function DOMAIN_SEPARATOR() external pure override returns (bytes32) {
     return bytes32(0); // Placeholder value
   }
 
-  function owner() external view override returns (address) {
+  function owner() external pure override returns (address) {
     return address(0); // Placeholder value
   }
 
-  function feeRecipient() external view override returns (address) {
+  function feeRecipient() external pure override returns (address) {
     return address(0); // Placeholder value
   }
 
-  function isIrmEnabled(address) external view override returns (bool) {
+  function isIrmEnabled(address) external pure override returns (bool) {
     return false; // Placeholder value
   }
 
-  function isLltvEnabled(uint256) external view override returns (bool) {
+  function isLltvEnabled(uint256) external pure override returns (bool) {
     return false; // Placeholder value
   }
 
-  function isAuthorized(address, address) external view override returns (bool) {
+  function isAuthorized(address, address) external pure override returns (bool) {
     return false; // Placeholder value
   }
 
-  function nonce(address) external view override returns (uint256) {
+  function nonce(address) external pure override returns (uint256) {
     return uint256(0); // Placeholder value
   }
 
@@ -87,7 +87,7 @@ contract MockMorpho is IMorpho {
     uint256,
     address,
     bytes memory
-  ) external override returns (uint256, uint256) {
+  ) external pure override returns (uint256, uint256) {
     return (uint256(0), uint256(0)); // Placeholder values
   }
 
@@ -97,7 +97,7 @@ contract MockMorpho is IMorpho {
     uint256,
     address,
     address
-  ) external override returns (uint256, uint256) {
+  ) external pure override returns (uint256, uint256) {
     return (uint256(0), uint256(0)); // Placeholder values
   }
 
@@ -107,7 +107,7 @@ contract MockMorpho is IMorpho {
     uint256,
     address,
     address
-  ) external override returns (uint256, uint256) {
+  ) external pure override returns (uint256, uint256) {
     return (uint256(0), uint256(0)); // Placeholder values
   }
 
@@ -117,7 +117,7 @@ contract MockMorpho is IMorpho {
     uint256,
     address,
     bytes memory
-  ) external override returns (uint256, uint256) {
+  ) external pure override returns (uint256, uint256) {
     return (uint256(0), uint256(0)); // Placeholder values
   }
 
@@ -135,7 +135,7 @@ contract MockMorpho is IMorpho {
     uint256,
     uint256,
     bytes memory
-  ) external override returns (uint256, uint256) {
+  ) external pure override returns (uint256, uint256) {
     return (uint256(0), uint256(0)); // Placeholder values
   }
 
@@ -155,7 +155,7 @@ contract MockMorpho is IMorpho {
     // Placeholder body
   }
 
-  function extSloads(bytes32[] memory) external view override returns (bytes32[] memory) {
+  function extSloads(bytes32[] memory) external pure override returns (bytes32[] memory) {
     return new bytes32[](0); // Placeholder value
   }
 }

@@ -3,6 +3,7 @@ pragma solidity ^0.8.2;
 
 import "../../lib/forge-std/src/Test.sol";
 import "../../lib/metamorpho/src/interfaces/IMetaMorpho.sol";
+import {Market} from "../../lib/metamorpho/lib/morpho-blue/src/interfaces/IMorpho.sol";
 
 import "../../src/core/Pythia.sol";
 import "../../src/core/SmartLTV.sol";
