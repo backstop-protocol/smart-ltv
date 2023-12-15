@@ -1,79 +1,32 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
-import "../../src/external/Morpho.sol";
-
-struct MarketInfo {
-  uint128 totalSupplyAssets;
-  uint128 totalSupplyShares;
-  uint128 totalBorrowAssets;
-  uint128 totalBorrowShares;
-  uint128 lastUpdate;
-  uint128 fee;
-}
-
-struct PositionInfo {
-  uint256 supplyShares;
-  uint128 borrowShares;
-  uint128 collateral;
-}
+import "../../lib/morpho-blue/src/interfaces/IMorpho.sol";
 
 contract MockMorpho is IMorpho {
   // Mock state variables
-  mapping(Id => MarketInfo) public marketInfos;
-  mapping(Id => mapping(address => PositionInfo)) public positionInfos;
+  mapping(Id => Market) public marketInfos;
+  mapping(Id => mapping(address => Position)) public positionInfos;
 
   // Setters for mock data
-  function setMarketInfo(Id marketId, MarketInfo memory marketInfo) external {
+  function setMarketInfo(Id marketId, Market memory marketInfo) external {
     marketInfos[marketId] = marketInfo;
   }
 
-  function setPositionInfo(Id marketId, address user, PositionInfo memory positionInfo) external {
+  function setPositionInfo(Id marketId, address user, Position memory positionInfo) external {
     positionInfos[marketId][user] = positionInfo;
   }
 
-  function idToMarketParams(
-    Id /*id*/
-  ) external pure returns (address loanToken, address collateralToken, address oracle, address irm, uint256 lltv) {
-    loanToken = address(0);
-    collateralToken = address(0);
-    oracle = address(0);
-    irm = address(0);
-    lltv = 0;
+  function position(Id id, address user) external view returns (Position memory p) {
+    return positionInfos[id][user];
   }
 
-  // Mock implementation of IMorpho interface methods
-  function market(
-    Id id
-  )
-    external
-    view
-    override
-    returns (
-      uint128 totalSupplyAssets,
-      uint128 totalSupplyShares,
-      uint128 totalBorrowAssets,
-      uint128 totalBorrowShares,
-      uint128 lastUpdate,
-      uint128 fee
-    )
-  {
-    MarketInfo memory mInfo = marketInfos[id];
-    return (
-      mInfo.totalSupplyAssets,
-      mInfo.totalSupplyShares,
-      mInfo.totalBorrowAssets,
-      mInfo.totalBorrowShares,
-      mInfo.lastUpdate,
-      mInfo.fee
-    );
+  function market(Id id) external view returns (Market memory m) {
+    return marketInfos[id];
   }
 
-  function position(
-    Id id,
-    address user
-  ) external view override returns (uint256 supplyShares, uint128 borrowShares, uint128 collateral) {
-    PositionInfo memory pInfo = positionInfos[id][user];
-    return (pInfo.supplyShares, pInfo.borrowShares, pInfo.collateral);
+  function idToMarketParams(Id id) external view returns (MarketParams memory) {
+    return
+      MarketParams({loanToken: address(0), collateralToken: address(0), oracle: address(0), irm: address(0), lltv: 0});
   }
 }

@@ -7,9 +7,11 @@ import {SmartLTV} from "../../../src/core/SmartLTV.sol";
 import {RiskData} from "../../../src/interfaces/RiskData.sol";
 import {MessageHashUtils} from "../../../lib/openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
 import "../../../src/lib/ErrorLib.sol";
-import "../../mocks/MockMorpho.sol";
-import "../../mocks/MockMetaMorpho.sol";
-import "../../../src/external/Morpho.sol";
+import {MockMorpho} from "../../mocks/MockMorpho.sol";
+import {MockMetaMorpho} from "../../mocks/MockMetaMorpho.sol";
+import "../../../lib/metamorpho/src/interfaces/IMetaMorpho.sol";
+import {MarketParamsLib} from "../../../lib/morpho-blue/src/libraries/MarketParamsLib.sol";
+import {Market, Position} from "../../../lib/morpho-blue/src/interfaces/IMorpho.sol";
 import "../../../src/morpho/BProtocolMorphoAllocator.sol";
 import "../../TestUtils.sol";
 
@@ -54,7 +56,7 @@ contract BProtocolMorphoAllocatorTest is Test {
   function setupMorphoMock() internal {
     mockMorpho = new MockMorpho();
 
-    MarketInfo memory market1Info = MarketInfo({
+    Market memory market1Info = Market({
       totalSupplyAssets: 1000e18,
       totalSupplyShares: 500e18,
       totalBorrowAssets: 250e18,
@@ -62,9 +64,9 @@ contract BProtocolMorphoAllocatorTest is Test {
       lastUpdate: uint128(block.timestamp),
       fee: 0
     });
-    mockMorpho.setMarketInfo(MorphoLib.id(market1), market1Info);
+    mockMorpho.setMarketInfo(MarketParamsLib.id(market1), market1Info);
 
-    MarketInfo memory market2Info = MarketInfo({
+    Market memory market2Info = Market({
       totalSupplyAssets: 5000e18,
       totalSupplyShares: 2500e18,
       totalBorrowAssets: 4000e18,
@@ -73,16 +75,16 @@ contract BProtocolMorphoAllocatorTest is Test {
       fee: 0
     });
 
-    mockMorpho.setMarketInfo(MorphoLib.id(market2), market2Info);
+    mockMorpho.setMarketInfo(MarketParamsLib.id(market2), market2Info);
   }
 
   function setupMetaMorphoMock(IMorpho morpho) internal {
     mockMetaMorpho = new MockMetaMorpho(morpho);
 
-    ConfigData memory configDataMarket1 = ConfigData({cap: 1_000_000e18, enabled: true, removableAt: 0});
-    mockMetaMorpho.setConfig(MorphoLib.id(market1), configDataMarket1);
-    ConfigData memory configDataMarket2 = ConfigData({cap: 10_000e18, enabled: true, removableAt: 0});
-    mockMetaMorpho.setConfig(MorphoLib.id(market2), configDataMarket2);
+    MarketConfig memory configDataMarket1 = MarketConfig({cap: 1_000_000e18, enabled: true, removableAt: 0});
+    mockMetaMorpho.setConfig(MarketParamsLib.id(market1), configDataMarket1);
+    MarketConfig memory configDataMarket2 = MarketConfig({cap: 10_000e18, enabled: true, removableAt: 0});
+    mockMetaMorpho.setConfig(MarketParamsLib.id(market2), configDataMarket2);
   }
 
   /// @notice Sets up the testing environment with necessary contract instances and configurations
@@ -186,8 +188,8 @@ contract BProtocolMorphoAllocatorTest is Test {
   ///         that should not check the risk levels
   function testCheckReallocateWithWitdraw() public {
     // first we set a position for the market1
-    PositionInfo memory pInfo = PositionInfo({supplyShares: 1000e18, borrowShares: 0, collateral: 0});
-    mockMorpho.setPositionInfo(MorphoLib.id(market1), address(mockMetaMorpho), pInfo);
+    Position memory pInfo = Position({supplyShares: 1000e18, borrowShares: 0, collateral: 0});
+    mockMorpho.setPosition(MarketParamsLib.id(market1), address(mockMetaMorpho), pInfo);
 
     // then we generate the allocation,
     MarketAllocation[] memory allocations = new MarketAllocation[](1);
@@ -221,8 +223,8 @@ contract BProtocolMorphoAllocatorTest is Test {
   ///         that should not check the risk levels
   function testCheckReallocateZeroAsset() public {
     // first we set a position for the market1
-    PositionInfo memory pInfo = PositionInfo({supplyShares: 1000e18, borrowShares: 0, collateral: 0});
-    mockMorpho.setPositionInfo(MorphoLib.id(market1), address(mockMetaMorpho), pInfo);
+    Position memory pInfo = Position({supplyShares: 1000e18, borrowShares: 0, collateral: 0});
+    mockMorpho.setPosition(MarketParamsLib.id(market1), address(mockMetaMorpho), pInfo);
 
     // then we generate the allocation,
     MarketAllocation[] memory allocations = new MarketAllocation[](1);
@@ -256,8 +258,8 @@ contract BProtocolMorphoAllocatorTest is Test {
   ///         expecting a revert with LTV_TOO_HIGH error
   function testCheckReallocateSupplyTooRisky() public {
     // first we set a position for the market1
-    PositionInfo memory pInfo = PositionInfo({supplyShares: 1000e18, borrowShares: 0, collateral: 0});
-    mockMorpho.setPositionInfo(MorphoLib.id(market2), address(mockMetaMorpho), pInfo);
+    Position memory pInfo = Position({supplyShares: 1000e18, borrowShares: 0, collateral: 0});
+    mockMorpho.setPosition(MarketParamsLib.id(market2), address(mockMetaMorpho), pInfo);
 
     // then we generate the allocation,
     // the signature needs to be valid because we will check risk
@@ -293,8 +295,8 @@ contract BProtocolMorphoAllocatorTest is Test {
   /// @notice Tests the checkAndReallocate function with a valid risk scenario, verifying correct allocation without error
   function testCheckReallocateSupplyValidRisk() public {
     // first we set a position for the market1
-    PositionInfo memory pInfo = PositionInfo({supplyShares: 1000e18, borrowShares: 0, collateral: 0});
-    mockMorpho.setPositionInfo(MorphoLib.id(market1), address(mockMetaMorpho), pInfo);
+    Position memory pInfo = Position({supplyShares: 1000e18, borrowShares: 0, collateral: 0});
+    mockMorpho.setPosition(MarketParamsLib.id(market1), address(mockMetaMorpho), pInfo);
 
     // then we generate the allocation,
     // the signature needs to be valid because we will check risk
@@ -331,12 +333,12 @@ contract BProtocolMorphoAllocatorTest is Test {
   ///         expecting a revert with LTV_TOO_HIGH error
   function testCheckReallocateWithdrawAndSupplyTooRisky() public {
     // first we set a position for the market1, where we want to withdraw
-    PositionInfo memory pInfo1 = PositionInfo({supplyShares: 1000e18, borrowShares: 0, collateral: 0});
-    mockMorpho.setPositionInfo(MorphoLib.id(market1), address(mockMetaMorpho), pInfo1);
+    Position memory pInfo1 = Position({supplyShares: 1000e18, borrowShares: 0, collateral: 0});
+    mockMorpho.setPosition(MarketParamsLib.id(market1), address(mockMetaMorpho), pInfo1);
 
     // first we set a position for the market2, where we want to supply
-    PositionInfo memory pInfo2 = PositionInfo({supplyShares: 10e18, borrowShares: 0, collateral: 0});
-    mockMorpho.setPositionInfo(MorphoLib.id(market2), address(mockMetaMorpho), pInfo2);
+    Position memory pInfo2 = Position({supplyShares: 10e18, borrowShares: 0, collateral: 0});
+    mockMorpho.setPosition(MarketParamsLib.id(market2), address(mockMetaMorpho), pInfo2);
 
     // then we generate the allocation,
     MarketAllocation[] memory allocations = new MarketAllocation[](2);
@@ -391,12 +393,12 @@ contract BProtocolMorphoAllocatorTest is Test {
   ///         verifying correct processing of both actions
   function testCheckReallocateWithdrawAndSupplyValid() public {
     // first we set a position for the market1, where we want to withdraw
-    PositionInfo memory pInfo1 = PositionInfo({supplyShares: 1000e18, borrowShares: 0, collateral: 0});
-    mockMorpho.setPositionInfo(MorphoLib.id(market1), address(mockMetaMorpho), pInfo1);
+    Position memory pInfo1 = Position({supplyShares: 1000e18, borrowShares: 0, collateral: 0});
+    mockMorpho.setPosition(MarketParamsLib.id(market1), address(mockMetaMorpho), pInfo1);
 
     // we set a position for the market2, where we want to supply
-    PositionInfo memory pInfo2 = PositionInfo({supplyShares: 10e18, borrowShares: 0, collateral: 0});
-    mockMorpho.setPositionInfo(MorphoLib.id(market2), address(mockMetaMorpho), pInfo2);
+    Position memory pInfo2 = Position({supplyShares: 10e18, borrowShares: 0, collateral: 0});
+    mockMorpho.setPosition(MarketParamsLib.id(market2), address(mockMetaMorpho), pInfo2);
 
     // then we generate the allocation,
     MarketAllocation[] memory allocations = new MarketAllocation[](2);

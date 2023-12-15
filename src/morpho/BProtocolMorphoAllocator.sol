@@ -3,30 +3,13 @@ pragma solidity >=0.8.2 <0.9.0;
 
 import {RiskData, Signature} from "../interfaces/RiskData.sol";
 import {SmartLTV} from "../core/SmartLTV.sol";
-import {IMetaMorpho, MarketAllocation, Id, MarketParams, IMorpho, MathLib, WAD, MAX_LIQUIDATION_INCENTIVE_FACTOR, LIQUIDATION_CURSOR} from "../external/Morpho.sol";
 import {RiskyMath} from "../lib/RiskyMath.sol";
-import {MorphoLib} from "../external/Morpho.sol";
 import {ErrorLib} from "../lib/ErrorLib.sol";
+import "../../lib/metamorpho/src/interfaces/IMetaMorpho.sol";
+import "../../lib/morpho-blue/src/libraries/MathLib.sol";
 import "../../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
-
-/*  
-USDC/sDAI
-marketid 0x7a9e4757d1188de259ba5b47f4c08197f821e54109faa5b0502b9dfe2c10b741
-loanToken   address :  0x62bD2A599664D421132d7C54AB4DbE3233f4f0Ae
-  collateralToken   address :  0xD8134205b0328F5676aaeFb3B2a0DC15f4029d8C
-  oracle   address :  0xc1466Cc7e9ace925fA54398f99D2277a571A7a0a
-  irm   address :  0x9ee101eB4941d8D7A665fe71449360CEF3C8Bb87
-  lltv   uint256 :  900000000000000000
-  
-  
-USDC/USDT
-marketid: 0xbc6d1789e6ba66e5cd277af475c5ed77fcf8b084347809d9d92e400ebacbdd10
-  loanToken   address :  0x62bD2A599664D421132d7C54AB4DbE3233f4f0Ae
-  collateralToken   address :  0x576e379FA7B899b4De1E251e935B31543Df3e954
-  oracle   address :  0x095613a8C57a294E43E2bb5B62D628D8C8B00dAA
-  irm   address :  0x9ee101eB4941d8D7A665fe71449360CEF3C8Bb87
-  lltv   uint256 :  900000000000000000
-*/
+import {MarketParamsLib} from "../../lib/morpho-blue/src/libraries/MarketParamsLib.sol";
+import "../../lib/morpho-blue/src/libraries/ConstantsLib.sol";
 
 /// @title BProtocol Morpho Allocator Contract
 /// @author bprotocol, la-tribu.xyz
@@ -91,7 +74,7 @@ contract BProtocolMorphoAllocator is Ownable {
     Signature memory signature
   ) internal view {
     // find the market Id for this allocation
-    Id marketId = MorphoLib.id(allocation.marketParams);
+    Id marketId = MarketParamsLib.id(allocation.marketParams);
 
     // get the market infos from morpho blue contract
     (uint128 totalSupplyAssets, uint128 totalSupplyShares, , , , ) = METAMORPHO_VAULT.MORPHO().market(marketId);
@@ -145,7 +128,7 @@ contract BProtocolMorphoAllocator is Ownable {
   ) internal view returns (uint256) {
     (uint256 supplyShare, , ) = METAMORPHO_VAULT.MORPHO().position(marketId, address(METAMORPHO_VAULT));
 
-    uint256 currentVaultMarketSupply = MorphoLib.toAssetsDown(supplyShare, totalSupplyAssets, totalSupplyShares);
+    uint256 currentVaultMarketSupply = MathLib.toAssetsDown(supplyShare, totalSupplyAssets, totalSupplyShares);
     return currentVaultMarketSupply;
   }
 

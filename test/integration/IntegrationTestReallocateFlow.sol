@@ -2,8 +2,8 @@
 pragma solidity ^0.8.2;
 
 import "./MorphoFixture.sol";
-import "../../src/external/Morpho.sol";
 import "../TestUtils.sol";
+import "../../lib/morpho-blue/src/libraries/MathLib.sol";
 
 /// @title Integration Test for Reallocate Flow in Morpho Protocol
 /// @notice This contract tests the reallocation flow in the Morpho protocol, focusing on markets for SDAI, USDT, and IDLE.
@@ -60,7 +60,7 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
     (uint128 totalSupplyAssets, uint128 totalSupplyShares, , , , ) = morpho.market(marketId);
     (uint256 supplyShare, , ) = morpho.position(marketId, address(metaMorpho));
 
-    uint256 currentVaultMarketSupply = MorphoLib.toAssetsDown(supplyShare, totalSupplyAssets, totalSupplyShares);
+    uint256 currentVaultMarketSupply = MathLib.toAssetsDown(supplyShare, totalSupplyAssets, totalSupplyShares);
     return currentVaultMarketSupply;
   }
 
