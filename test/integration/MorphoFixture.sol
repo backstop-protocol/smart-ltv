@@ -2,10 +2,31 @@
 pragma solidity ^0.8.2;
 
 import "../../lib/forge-std/src/Test.sol";
-import "../../src/external/Morpho.sol";
+import "../../lib/metamorpho/src/interfaces/IMetaMorpho.sol";
+import {Market} from "../../lib/metamorpho/lib/morpho-blue/src/interfaces/IMorpho.sol";
+
 import "../../src/core/Pythia.sol";
 import "../../src/core/SmartLTV.sol";
-import "../../src/morpho/BProtocolMorphoAllocator.sol";
+import {BProtocolMorphoAllocator} from "../../src/morpho/BProtocolMorphoAllocator.sol";
+
+/*  
+USDC/sDAI
+marketid 0x7a9e4757d1188de259ba5b47f4c08197f821e54109faa5b0502b9dfe2c10b741
+loanToken   address :  0x62bD2A599664D421132d7C54AB4DbE3233f4f0Ae
+  collateralToken   address :  0xD8134205b0328F5676aaeFb3B2a0DC15f4029d8C
+  oracle   address :  0xc1466Cc7e9ace925fA54398f99D2277a571A7a0a
+  irm   address :  0x9ee101eB4941d8D7A665fe71449360CEF3C8Bb87
+  lltv   uint256 :  900000000000000000
+  
+  
+USDC/USDT
+marketid: 0xbc6d1789e6ba66e5cd277af475c5ed77fcf8b084347809d9d92e400ebacbdd10
+  loanToken   address :  0x62bD2A599664D421132d7C54AB4DbE3233f4f0Ae
+  collateralToken   address :  0x576e379FA7B899b4De1E251e935B31543Df3e954
+  oracle   address :  0x095613a8C57a294E43E2bb5B62D628D8C8B00dAA
+  irm   address :  0x9ee101eB4941d8D7A665fe71449360CEF3C8Bb87
+  lltv   uint256 :  900000000000000000
+*/
 
 /// @title defines the fixtures needed to take control of morpho blue goerli deployment
 /// by pranking addresses with roles and giving roles to contracts

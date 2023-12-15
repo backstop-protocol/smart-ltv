@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
-import "../src/external/Morpho.sol";
 import "../src/interfaces/RiskData.sol";
 import {MessageHashUtils} from "../lib/openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
 import "../lib/forge-std/src/Test.sol";

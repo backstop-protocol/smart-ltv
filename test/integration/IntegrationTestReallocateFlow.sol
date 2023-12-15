@@ -2,8 +2,10 @@
 pragma solidity ^0.8.2;
 
 import "./MorphoFixture.sol";
-import "../../src/external/Morpho.sol";
 import "../TestUtils.sol";
+import "../../lib/metamorpho/lib/morpho-blue/src/libraries/MathLib.sol";
+import {SharesMathLib} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/SharesMathLib.sol";
+import {Position} from "../../lib/metamorpho/lib/morpho-blue/src/interfaces/IMorpho.sol";
 
 /// @title Integration Test for Reallocate Flow in Morpho Protocol
 /// @notice This contract tests the reallocation flow in the Morpho protocol, focusing on markets for SDAI, USDT, and IDLE.
@@ -19,18 +21,6 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
   /// Mapping to track changes in Morpho market supply for each market. Used for assertions
   mapping(Id => int256) morphoMarketSupplyChange;
 
-  // @notice Converts a market ID to its corresponding MarketParams struct.
-  /// @dev Uses Morpho protocol's `idToMarketParams` method to fetch market parameters.
-  /// @param marketid The market ID to convert.
-  /// @return The corresponding MarketParams struct.
-  function idToMarketParamsStruct(Id marketid) internal view returns (MarketParams memory) {
-    (address loanToken, address collateralToken, address oracle, address irm, uint256 lltv) = morpho.idToMarketParams(
-      marketid
-    );
-
-    return MarketParams({loanToken: loanToken, collateralToken: collateralToken, oracle: oracle, irm: irm, lltv: lltv});
-  }
-
   /// @notice Computes and records the change in supply for a specified market.
   /// @dev Calculates changes in vault supply and Morpho market supply.
   /// @param marketId The market ID for which to compute supply changes.
@@ -44,11 +34,11 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
     }
 
     int256 currentMorphoChange = morphoMarketSupplyChange[marketId];
-    (uint128 totalSupplyAssets, , , , , ) = morpho.market(marketId);
+    Market memory m = morpho.market(marketId);
     if (currentMorphoChange == 0) {
-      morphoMarketSupplyChange[marketId] = int256(int128(totalSupplyAssets));
+      morphoMarketSupplyChange[marketId] = int256(int128(m.totalSupplyAssets));
     } else {
-      morphoMarketSupplyChange[marketId] = int256(int128(totalSupplyAssets)) - currentMorphoChange;
+      morphoMarketSupplyChange[marketId] = int256(int128(m.totalSupplyAssets)) - currentMorphoChange;
     }
   }
 
@@ -57,10 +47,14 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
   /// @param marketId The market ID to query.
   /// @return The current asset supply for the specified market.
   function getAssetSupplyForId(Id marketId) internal view returns (uint256) {
-    (uint128 totalSupplyAssets, uint128 totalSupplyShares, , , , ) = morpho.market(marketId);
-    (uint256 supplyShare, , ) = morpho.position(marketId, address(metaMorpho));
+    Market memory m = morpho.market(marketId);
+    Position memory p = morpho.position(marketId, address(metaMorpho));
 
-    uint256 currentVaultMarketSupply = MorphoLib.toAssetsDown(supplyShare, totalSupplyAssets, totalSupplyShares);
+    uint256 currentVaultMarketSupply = SharesMathLib.toAssetsDown(
+      p.supplyShares,
+      m.totalSupplyAssets,
+      m.totalSupplyShares
+    );
     return currentVaultMarketSupply;
   }
 
@@ -77,8 +71,8 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
   /// @param marketId The market ID to log.
   /// @param label A label for the log entry.
   function logMorphoMarketSupply(Id marketId, string memory label) internal view {
-    (uint128 totalSupplyAssets, , , , , ) = morpho.market(marketId);
-    console2.log("%s %e", label, totalSupplyAssets);
+    Market memory m = morpho.market(marketId);
+    console2.log("%s %e", label, m.totalSupplyAssets);
   }
 
   /// @notice Sets up the test environment.
@@ -86,9 +80,9 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
   function setUp() public override {
     super.setUp();
 
-    marketParamSDAI = idToMarketParamsStruct(marketIdSDAI);
-    marketParamUSDT = idToMarketParamsStruct(marketIdUSDT);
-    marketParamIdle = idToMarketParamsStruct(marketIdIdle);
+    marketParamSDAI = morpho.idToMarketParams(marketIdSDAI);
+    marketParamUSDT = morpho.idToMarketParams(marketIdUSDT);
+    marketParamIdle = morpho.idToMarketParams(marketIdIdle);
   }
 
   /// @notice Tests the initialization of the contract and market parameters.
