@@ -46,7 +46,7 @@ contract DeployMorphoAllocator is Script {
 
         vm.startBroadcast(PRIVATE_KEY);
         console.log("Deploying BProtocolMorphoAllocator contract");
-        new BProtocolMorphoAllocator(SmartLTV(SMARTLTV_ADDRESS), METAMORPHO_VAULT, INITIAL_OWNER);
+        new BProtocolMorphoAllocator(SmartLTV(SMARTLTV_ADDRESS), METAMORPHO_VAULT, INITIAL_OWNER, 10e18);
         console.log("Deployed BProtocolMorphoAllocator contract");
         vm.stopBroadcast();
     }

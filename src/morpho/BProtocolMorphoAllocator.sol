@@ -30,11 +30,13 @@ contract BProtocolMorphoAllocator is Ownable {
   IMetaMorpho public immutable METAMORPHO_VAULT;
 
   /// @notice A predefined constant representing the minimum confidence level factor
-  uint256 public immutable MIN_CLF = 3e18;
+  uint256 public immutable MIN_CLF;
 
-  constructor(SmartLTV smartLTV, address morphoVaultAddress, address initialOwner) Ownable(initialOwner) {
+  constructor(SmartLTV smartLTV, address morphoVaultAddress, address initialOwner, uint256 riskLevel) Ownable(initialOwner) {
     SMART_LTV = smartLTV;
     METAMORPHO_VAULT = IMetaMorpho(morphoVaultAddress);
+
+    MIN_CLF = 1e18 * 1e18 / riskLevel;
   }
 
   /// @notice Checks and reallocates market allocations based on the provided risk data and signatures.

@@ -93,7 +93,7 @@ contract BProtocolMorphoAllocatorTest is Test {
     smartLTV = new SmartLTV(pythia, trustedRelayerAddress);
     setupMorphoMock();
     setupMetaMorphoMock(IMorpho(mockMorpho));
-    morphoAllocator = new BProtocolMorphoAllocator(smartLTV, address(mockMetaMorpho), allocatorOwner);
+    morphoAllocator = new BProtocolMorphoAllocator(smartLTV, address(mockMetaMorpho), allocatorOwner, 10e18);
 
     // warp to a known block and timestamp
     vm.warp(1679067867);
