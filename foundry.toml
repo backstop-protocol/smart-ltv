@@ -1,5 +1,6 @@
 [profile.default]
 src = "src"
+script = "scripts"
 out = "out"
 # contracts in libs are excluded from code coverage reports
 libs = ["lib", "test/mocks"]

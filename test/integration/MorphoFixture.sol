@@ -54,7 +54,7 @@ contract MorphoFixture is Test {
     // create pythia, smartLTV and BProtocolMorphoAllocator contract
     pythia = new Pythia();
     smartLTV = new SmartLTV(pythia, trustedRelayerAddress);
-    morphoAllocator = new BProtocolMorphoAllocator(smartLTV, address(metaMorpho), allocatorOwner);
+    morphoAllocator = new BProtocolMorphoAllocator(smartLTV, address(metaMorpho), allocatorOwner, 10e18);
 
     // gives the allocator role to the BProtocolMorphoAllocator contract
     address ownerAddress = metaMorpho.owner();
