@@ -30,6 +30,8 @@ contract DeploySmartLTV is Script {
             revert ("missing TRUSTED_RELAYER");
         }
 
+        console.log("TRUSTED_RELAYER: %s", TRUSTED_RELAYER);
+
         if(PYTHIA_ADDRESS == address(0)) {
             DeployPythia dPythia = new DeployPythia();
             PYTHIA_ADDRESS = dPythia.run();
