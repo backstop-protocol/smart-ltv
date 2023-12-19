@@ -13,6 +13,8 @@ import "../../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 import {MarketParamsLib, MarketParams} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/MarketParamsLib.sol";
 import "../../lib/metamorpho/lib/morpho-blue/src/libraries/ConstantsLib.sol";
 
+// import {console} from "../../lib/forge-std/src/console.sol";
+
 /// @title BProtocol Morpho Allocator Contract
 /// @author bprotocol, la-tribu.xyz
 /// @notice This contract is responsible for reallocating market allocations while checking risk data before reallocating.
@@ -32,11 +34,16 @@ contract BProtocolMorphoAllocator is Ownable {
   /// @notice A predefined constant representing the minimum confidence level factor
   uint256 public immutable MIN_CLF;
 
-  constructor(SmartLTV smartLTV, address morphoVaultAddress, address initialOwner, uint256 riskLevel) Ownable(initialOwner) {
+  constructor(
+    SmartLTV smartLTV,
+    address morphoVaultAddress,
+    address initialOwner,
+    uint256 riskLevel
+  ) Ownable(initialOwner) {
     SMART_LTV = smartLTV;
     METAMORPHO_VAULT = IMetaMorpho(morphoVaultAddress);
 
-    MIN_CLF = 1e18 * 1e18 / riskLevel;
+    MIN_CLF = (1e18 * 1e18) / riskLevel;
   }
 
   /// @notice Checks and reallocates market allocations based on the provided risk data and signatures.
@@ -90,6 +97,7 @@ contract BProtocolMorphoAllocator is Ownable {
         // only check risk if not withdraw
         // because we want to allow withdraw for a risky market
         uint256 currentCap = _getCurrentCap(marketId, m.totalSupplyAssets);
+        // console.log("current cap: %s", currentCap);
         _checkAllocationRisk(currentCap, allocation.marketParams.lltv, riskData, signature);
       }
     }
@@ -175,6 +183,8 @@ contract BProtocolMorphoAllocator is Ownable {
       signature.s
     );
 
+    // console.log("recommended ltv: %s", recommendedLtv);
+
     // check if the current ltv is lower or equal to the recommended ltv
     if (marketLLTV > recommendedLtv) {
       revert ErrorLib.LTV_TOO_HIGH(marketLLTV, recommendedLtv);
@@ -183,16 +193,18 @@ contract BProtocolMorphoAllocator is Ownable {
 
   /// @notice Calculates the liquidation incentives based on market LTV.
   /// @param marketParamsLLTV The LTV parameter of the market.
-  /// @return The calculated liquidation incentives.
-  function _getLiquidationIncentives(uint256 marketParamsLLTV) private pure returns (uint256) {
+  /// @return liquidationIncentives calculated liquidation incentives. 3% = 0.03e18
+  function _getLiquidationIncentives(uint256 marketParamsLLTV) private pure returns (uint256 liquidationIncentives) {
     // The liquidation incentive factor is min(maxLiquidationIncentiveFactor, 1/(1 - cursor*(1 - lltv))).
-    uint256 computedLiquidationIncentives = WAD.wDivDown(WAD - LIQUIDATION_CURSOR.wMulDown(WAD - marketParamsLLTV)) -
-      WAD;
+    uint256 computedLiquidationIncentives = WAD.wDivDown(WAD - LIQUIDATION_CURSOR.wMulDown(WAD - marketParamsLLTV));
 
-    if (MAX_LIQUIDATION_INCENTIVE_FACTOR < computedLiquidationIncentives) {
-      return MAX_LIQUIDATION_INCENTIVE_FACTOR;
-    } else {
-      return computedLiquidationIncentives;
-    }
+    // liquidation incentive is capped at 'MAX_LIQUIDATION_INCENTIVE_FACTOR' from the morpho constant lib
+    liquidationIncentives = MAX_LIQUIDATION_INCENTIVE_FACTOR < computedLiquidationIncentives
+      ? MAX_LIQUIDATION_INCENTIVE_FACTOR
+      : computedLiquidationIncentives;
+
+    // here liquidationIncentives for 15% is 1.15e18. We want 0.15e18 for the smartLTV call
+    // so we substract 1 WAD from it
+    liquidationIncentives -= WAD;
   }
 }

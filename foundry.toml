@@ -3,6 +3,6 @@ src = "src"
 script = "scripts"
 out = "out"
 # contracts in libs are excluded from code coverage reports
-libs = ["lib", "test/mocks"]
+libs = ["lib", "test/mocks", "scripts"]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

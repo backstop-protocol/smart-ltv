@@ -12,7 +12,7 @@ import {BProtocolMorphoAllocator} from "../../src/morpho/BProtocolMorphoAllocato
 /*  
 USDC/sDAI
 marketid 0x7a9e4757d1188de259ba5b47f4c08197f821e54109faa5b0502b9dfe2c10b741
-loanToken   address :  0x62bD2A599664D421132d7C54AB4DbE3233f4f0Ae
+  loanToken   address :  0x62bD2A599664D421132d7C54AB4DbE3233f4f0Ae
   collateralToken   address :  0xD8134205b0328F5676aaeFb3B2a0DC15f4029d8C
   oracle   address :  0xc1466Cc7e9ace925fA54398f99D2277a571A7a0a
   irm   address :  0x9ee101eB4941d8D7A665fe71449360CEF3C8Bb87
