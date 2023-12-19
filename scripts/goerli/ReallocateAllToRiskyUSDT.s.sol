@@ -87,6 +87,7 @@ contract ReallocateAllToRiskyUSDT is Script {
 
   function generateCheckAndReallocateData()
     public
+    view
     returns (MarketAllocation[] memory allocations, RiskData[] memory riskDatas, Signature[] memory signatures)
   {
     allocations = new MarketAllocation[](3);
