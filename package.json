@@ -11,8 +11,8 @@
     "test-integration": "forge test --match-path './test/integration/**' --fork-url $GOERLI_RPC_URL -vvv",
     "coverage": "forge coverage --match-path './test/unit/**' --report summary --report lcov",
     "build": "forge build",
-    "prettier-format": "prettier --config .prettierrc \"./(src|test)/**/*.sol\" --write",
-    "prettier-watch": "onchange \"(src|test)/**/*.sol\" -- prettier --write {{changed}}",
+    "prettier-format": "prettier --config .prettierrc \"./(src|test|scripts)/**/*.sol\" --write",
+    "prettier-watch": "onchange \"(src|test|scripts)/**/*.sol\" -- prettier --write {{changed}}",
     "deploy-allocator": "forge script scripts/morpho/DeployMorphoAllocator.s.sol -vvvv --rpc-url $RPC_URL --broadcast --verify --etherscan-api-key ETHERSCAN_API_KEY --verifier-url https://api-goerli.etherscan.io/api"
   },
   "author": "",
