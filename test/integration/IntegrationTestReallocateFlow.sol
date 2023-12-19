@@ -6,6 +6,7 @@ import "../TestUtils.sol";
 import "../../lib/metamorpho/lib/morpho-blue/src/libraries/MathLib.sol";
 import {SharesMathLib} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/SharesMathLib.sol";
 import {Position} from "../../lib/metamorpho/lib/morpho-blue/src/interfaces/IMorpho.sol";
+import {ErrorLib} from "../../src/lib/ErrorLib.sol";
 
 /// @title Integration Test for Reallocate Flow in Morpho Protocol
 /// @notice This contract tests the reallocation flow in the Morpho protocol, focusing on markets for SDAI, USDT, and IDLE.
@@ -268,4 +269,89 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
     console2.log("IDLE vault supply change: %s", vaultSupplyChange[marketIdIdle]);
     console2.log("IDLE market supply change: %s", morphoMarketSupplyChange[marketIdIdle]);
   }
+
+  // function changeMarketCap(MarketParams memory marketParams, Id marketId, uint256 newCap) public {
+  //   address vaultOwner = metaMorpho.owner();
+  //   vm.startPrank(vaultOwner);
+  //   metaMorpho.submitCap(marketParams, newCap);
+  //   vm.roll(block.number + 1000);
+  //   vm.warp(block.timestamp + 1000 * 10);
+  //   metaMorpho.acceptCap(marketId);
+  //   vm.stopPrank();
+  // }
+
+  // function testRiskCheckFailForUSDT() public {
+  //   // get and log morpho blue markets
+  //   computeMarketChange(marketIdSDAI);
+  //   computeMarketChange(marketIdUSDT);
+  //   computeMarketChange(marketIdIdle);
+
+  //   logMetamorphoVaultSupply(marketIdSDAI, "sDAI vault supply before:");
+  //   logMetamorphoVaultSupply(marketIdUSDT, "USDT vault supply before:");
+  //   logMetamorphoVaultSupply(marketIdIdle, "IDLE vault supply before:");
+  //   logMorphoMarketSupply(marketIdSDAI, "sDAI market supply before:");
+  //   logMorphoMarketSupply(marketIdUSDT, "USDT market supply before:");
+  //   logMorphoMarketSupply(marketIdIdle, "IDLE market supply before:");
+
+  //   console.log("market cap before: %s", metaMorpho.config(marketIdUSDT).cap);
+  //   uint256 newCap = 10_000_000_000e6;
+  //   changeMarketCap(marketParamUSDT, marketIdUSDT, newCap);
+  //   console.log("market cap now: %s", metaMorpho.config(marketIdUSDT).cap);
+  //   assertEq(newCap, metaMorpho.config(marketIdUSDT).cap);
+
+  //   // withdraw from sDAI and USDT markets and put all to idle
+  //   // to do that we need to create 3 allocations (and the same amount of risk data and signature)
+  //   MarketAllocation[] memory allocations = new MarketAllocation[](3);
+  //   RiskData[] memory riskDatas = new RiskData[](3);
+  //   Signature[] memory signatures = new Signature[](3);
+
+  //   // first allocation is the withdraw from the sdai market
+  //   allocations[0] = MarketAllocation({marketParams: marketParamSDAI, assets: 0});
+  //   // second allocation is the supply to usdt market
+  //   allocations[1] = MarketAllocation({
+  //     marketParams: marketParamUSDT,
+  //     assets: getAssetSupplyForId(marketIdUSDT) + 1000e6
+  //   });
+
+  //   // third allocation is the supply to the idle market
+  //   allocations[2] = MarketAllocation({marketParams: marketParamIdle, assets: type(uint256).max});
+  //   // all risk data are useless because only withdraw or supply to idle market
+  //   riskDatas[0] = RiskData({
+  //     collateralAsset: address(1), // Example address
+  //     debtAsset: address(2), // Example address
+  //     liquidity: 1000, // Example value
+  //     volatility: 500, // Example value
+  //     lastUpdate: block.timestamp, // Current block timestamp
+  //     chainId: block.chainid // Current chain ID
+  //   });
+
+  //   (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = TestUtils.signDataValid(
+  //     trustedRelayerPrivateKey,
+  //     marketParamUSDT.collateralToken,
+  //     marketParamUSDT.loanToken,
+  //     pythia.RISKDATA_TYPEHASH(),
+  //     pythia.DOMAIN_SEPARATOR(),
+  //     100_000_000e6,
+  //     0.0968e18
+  //   );
+
+  //   riskDatas[1] = data;
+  //   riskDatas[2] = riskDatas[0];
+  //   // same for signature
+  //   signatures[0] = Signature({
+  //     v: uint8(27), // Example value
+  //     r: bytes32(0), // Example value
+  //     s: bytes32(0) // Example value
+  //   });
+
+  //   signatures[1] = Signature({v: v, r: r, s: s});
+  //   signatures[2] = signatures[0];
+
+  //   vm.prank(allocatorOwner);
+  //   try morphoAllocator.checkAndReallocate(allocations, riskDatas, signatures) {} catch (bytes memory reason) {
+  //     bytes4 expectedSelector = ErrorLib.LTV_TOO_HIGH.selector;
+  //     bytes4 receivedSelector = bytes4(reason);
+  //     assertEq(expectedSelector, receivedSelector);
+  //   }
+  // }
 }
