@@ -36,16 +36,21 @@ contract Pythia {
   constructor() {
     chainId = block.chainid;
 
-    EIP712Domain memory domain = EIP712Domain({name: "SPythia", version: "0.0.1", chainId: chainId, verifyingContract: address(this)});
+    EIP712Domain memory domain = EIP712Domain({
+      name: "SPythia",
+      version: "0.0.1",
+      chainId: chainId,
+      verifyingContract: address(this)
+    });
     DOMAIN_SEPARATOR = keccak256(
-        abi.encode(
-          EIP712DOMAIN_TYPEHASH,
-          keccak256(bytes(domain.name)),
-          keccak256(bytes(domain.version)),
-          domain.chainId,
-          domain.verifyingContract
-        )
-      );
+      abi.encode(
+        EIP712DOMAIN_TYPEHASH,
+        keccak256(bytes(domain.name)),
+        keccak256(bytes(domain.version)),
+        domain.chainId,
+        domain.verifyingContract
+      )
+    );
   }
 
   /// @notice Hashes a RiskData struct using the EIP712 risk data type hash.
