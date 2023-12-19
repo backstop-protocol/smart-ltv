@@ -18,7 +18,8 @@ contract DeployMorphoAllocator is Script {
       "ETH_PRIVATE_KEY",
       77814517325470205911140941194401928579557062014761831930645393041380819009408
     );
-    aaa SMARTLTV_ADDRESS = vm.envOr("SMARTLTV_ADDRESS", address(0));
+
+    SMARTLTV_ADDRESS = vm.envOr("SMARTLTV_ADDRESS", address(0));
     METAMORPHO_VAULT = vm.envOr("METAMORPHO_VAULT", address(0));
     INITIAL_OWNER = vm.envOr("INITIAL_OWNER", address(0));
   }
