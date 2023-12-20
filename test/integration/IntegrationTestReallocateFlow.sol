@@ -107,9 +107,9 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
 
     // get the number of asset in the sdai market
     uint256 sDaiSupplyBefore = getAssetSupplyForId(marketIdSDAI);
-    console2.log("sDAI supply before: %s", sDaiSupplyBefore);
 
     // get the number of assets in the usdt market
+    logMetamorphoVaultSupply(marketIdSDAI, "sDAI supply before:");
     logMetamorphoVaultSupply(marketIdUSDT, "USDT supply before:");
 
     // rebalance to withdraw from sdai market
@@ -139,7 +139,7 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
 
     // the risk data for the second allocation need to be correct
     // these risk parameters should make the smartLTV returns a valid ltv
-    uint256 liquidity = 10_000_000_000e18; // big liquidity
+    uint256 liquidity = 10_000_000_000e6; // big liquidity
     uint256 volatility = 0.01e18; // low volatility
 
     (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = TestUtils.signDataValid(
