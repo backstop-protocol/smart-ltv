@@ -34,7 +34,6 @@ contract EmergencyWithdrawal {
     IMorpho morpho = vault.MORPHO();
     uint256 nbMarkets = vault.withdrawQueueLength();
     MarketParams memory idleMarketPrm;
-
     MarketAllocation[] memory allocations = new MarketAllocation[](nbMarkets);
 
     uint256 allocationCounter = 0;
