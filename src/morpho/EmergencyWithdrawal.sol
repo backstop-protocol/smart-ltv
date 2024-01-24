@@ -10,6 +10,11 @@ import {MorphoBalancesLib} from "../../lib/metamorpho/lib/morpho-blue/src/librar
 import {MorphoLib} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/periphery/MorphoLib.sol";
 import {UtilsLib} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/UtilsLib.sol";
 
+/// @title Emergency Withdrawal Contract
+/// @notice This contract allows for the withdrawal of assets from all non-idle markets to the idle market in case of an emergency.
+/// It uses various libraries from the MetaMorpho protocol for interacting with the vaults and computing correct values
+/// Can only be called by a vault allocator to withdraw the maximum amount from all non-idle markets
+/// @dev this contract must have the allocator role on the vaults
 contract EmergencyWithdrawal {
   using MorphoBalancesLib for IMorpho;
   using MarketParamsLib for MarketParams;
@@ -18,18 +23,29 @@ contract EmergencyWithdrawal {
   using MorphoLib for IMorpho;
   using UtilsLib for uint256;
 
+  // Addresses for the ETH and USDC Metamorpho vaults in the Morpho protocol.
   IMetaMorpho public immutable ETH_VAULT = IMetaMorpho(0x38989BBA00BDF8181F4082995b3DEAe96163aC5D);
   IMetaMorpho public immutable USDC_VAULT = IMetaMorpho(0x186514400e52270cef3D80e1c6F8d10A75d47344);
 
+  /// @notice Withdraws the maximum possible assets from the ETH vault non-idle markets to the idle market.
+  /// @dev Calls `withdrawMaxToIdle` with the ETH vault.
   function withdrawETH() public {
     withdrawMaxToIdle(ETH_VAULT);
   }
 
+  /// @notice Withdraws the maximum possible assets from the USDC vault non-idle markets to the idle market.
+  /// @dev Calls `withdrawMaxToIdle` with the USDC vault.
   function withdrawUSDC() public {
     withdrawMaxToIdle(USDC_VAULT);
   }
 
+  /// @notice internal function allowing withdraw the maximum possible assets from a specified vault to an idle market.
+  /// @param vault The MetaMorpho vault from which assets are to be withdrawn.
+  /// Requires that the caller is an allocator for the specified vault.
+  /// Reallocates funds from various markets to the idle market.
+  /// @dev it assumes that there is only one idle market in the vault queue
   function withdrawMaxToIdle(IMetaMorpho vault) private {
+    // can only work is the msg.sender is an allocator of the vault
     require(vault.isAllocator(msg.sender), "EmergencyWithdrawal: msg.sender is not vault allocator");
     IMorpho morpho = vault.MORPHO();
     uint256 nbMarkets = vault.withdrawQueueLength();
@@ -61,9 +77,13 @@ contract EmergencyWithdrawal {
       }
     }
 
-    // last allocation is the uint max to the idle market
+    // last allocation is the uint max to the idle market, meaning all that is withdrawn in the previous allocations
+    // will be sent to the idle market
     allocations[allocationCounter] = MarketAllocation({marketParams: idleMarketPrm, assets: type(uint256).max});
 
+    // finally, call the reallocate with the allocations
+    // allocations should always be: 1 allocation per non-idle market (should all be withdraws)
+    // and exactly 1 allocation to the idle market with uint.max as the target supply
     vault.reallocate(allocations);
   }
 }
