@@ -39,7 +39,7 @@ contract EmergencyWithdrawal {
     withdrawMaxToIdle(USDC_VAULT);
   }
 
-  /// @notice internal function allowing withdraw the maximum possible assets from a specified vault to an idle market.
+  /// @notice internal function allowing to withdraw the maximum possible assets from a specified vault to an idle market.
   /// @param vault The MetaMorpho vault from which assets are to be withdrawn.
   /// Requires that the caller is an allocator for the specified vault.
   /// Reallocates funds from various markets to the idle market.
