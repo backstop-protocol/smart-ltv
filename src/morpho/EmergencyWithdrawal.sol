@@ -47,7 +47,7 @@ contract EmergencyWithdrawal {
   /// @dev this function is public to allow calling for any vault address
   function withdrawMaxToIdle(address vaultAddress) public {
     IMetaMorpho vault = IMetaMorpho(vaultAddress);
-    // can only work is the msg.sender is an allocator of the vault
+    // can only work if the msg.sender is an allocator of the vault
     require(vault.isAllocator(msg.sender), "EmergencyWithdrawal: msg.sender is not vault allocator");
     IMorpho morpho = vault.MORPHO();
     uint256 nbMarkets = vault.withdrawQueueLength();
