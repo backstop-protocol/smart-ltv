@@ -105,8 +105,8 @@ contract IntegrationTestEmergencyWithdrawal is Test {
 
   function setUp() public {
     emergencyContract = new EmergencyWithdrawal();
-    USDC_VAULT = emergencyContract.USDC_VAULT();
-    ETH_VAULT = emergencyContract.ETH_VAULT();
+    USDC_VAULT = IMetaMorpho(emergencyContract.USDC_VAULT());
+    ETH_VAULT = IMetaMorpho(emergencyContract.ETH_VAULT());
     morpho = ETH_VAULT.MORPHO();
 
     USDC_VAULT_OWNER = USDC_VAULT.owner();
