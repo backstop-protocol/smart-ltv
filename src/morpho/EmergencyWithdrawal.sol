@@ -44,6 +44,7 @@ contract EmergencyWithdrawal {
   /// Requires that the caller is an allocator for the specified vault.
   /// Reallocates funds from various markets to the idle market.
   /// @dev it assumes that there is only one idle market in the vault queue
+  /// @dev this function is public to allow calling for any vault address
   function withdrawMaxToIdle(address vaultAddress) public {
     IMetaMorpho vault = IMetaMorpho(vaultAddress);
     // can only work is the msg.sender is an allocator of the vault
