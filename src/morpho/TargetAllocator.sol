@@ -25,27 +25,39 @@ contract TargetAllocator {
     uint256 minLiquidity; // absolute amount in wei
   }
 
-  /// @notice this is the idle market from/to which we will reallocate
+  /// @notice this is the idle market from/to which we will reallocate, set in the ctor
   Id public immutable IDLE_MARKET_ID;
 
+  /// @notice the metamorpho vault address, set in the ctor
   address public immutable VAULT_ADDRESS;
 
+  /// @notice the Morpho blue contract, set in the ctor
   IMorpho public immutable MORPHO;
 
+  /// @notice the last reallocation performed by the keeperCall function
   uint256 public lastReallocationTimestamp;
 
-  // TODO setter
+  /// @notice the minimum delay between two reallocation by the keeperCall function
   uint256 public minDelayBetweenReallocations;
 
-  // TODO setter
+  /// @notice mapping of marketId => target allocation parameters
+  /// set in the constructor but can be modified by any of the vault allocators
   mapping(Id => TargetAllocation) public targetAllocations;
 
-  // TODO setter
+  /// @notice the minimum reallocation size, used to not broadcast a transaction for moving dust amount of an asset
   uint256 public minReallocationSize;
 
-  // TODO setter
+  /// @notice the keeper (bot) address that will be used to automatically call the keeperCheck and keeperCall functions
   address public keeperAddress;
 
+  /// @notice Initializes a new TargetAllocator contract with specific market target allocations and operational settings.
+  /// @param _idleMarketId The market identifier for the idle market.
+  /// @param _vault The address of the Morpho vault.
+  /// @param _minDelayBetweenReallocations The minimum delay between two reallocation actions.
+  /// @param _minReallocationSize The minimum size of assets to be considered for reallocation.
+  /// @param _keeperAddress The address of the keeper responsible for triggering reallocations.
+  /// @param _marketIds An array of market identifiers for which target allocations are being set.
+  /// @param _targetAllocations An array of target allocation settings corresponding to the market identifiers.
   constructor(
     bytes32 _idleMarketId,
     address _vault,
@@ -78,6 +90,42 @@ contract TargetAllocator {
     }
   }
 
+  /** ONLY ALLOCATORS SETTER FUNCTIONS */
+
+  /// @notice Sets the minimum delay between reallocations.
+  /// @param _newValue The new minimum delay value in seconds.
+  function SetMinDelayBetweenReallocations(uint256 _newValue) external {
+    require(isVaultAllocator(msg.sender), "TargetAllocator: caller not allowed");
+    minDelayBetweenReallocations = _newValue;
+  }
+
+  /// @notice Sets the minimum size for reallocations to avoid transactions for negligible amounts.
+  /// @param _newValue The new minimum reallocation size in the asset's smallest unit.
+  function SetMinReallocationSize(uint256 _newValue) external {
+    require(isVaultAllocator(msg.sender), "TargetAllocator: caller not allowed");
+    minReallocationSize = _newValue;
+  }
+
+  /// @notice Sets the keeper address responsible for triggering reallocations.
+  /// @param _newValue The new address of the keeper.
+  function SetKeeperAddress(address _newValue) external {
+    require(isVaultAllocator(msg.sender), "TargetAllocator: caller not allowed");
+    keeperAddress = _newValue;
+  }
+
+  /// @notice Sets target allocation parameters for a given market.
+  /// @param marketId The market identifier for which to set the target allocation.
+  /// @param targetAllocation The target allocation parameters including max, target, and min utilization percentages, and min liquidity.
+  function SetTargetAllocation(bytes32 marketId, TargetAllocation memory targetAllocation) external {
+    require(isVaultAllocator(msg.sender), "TargetAllocator: caller not allowed");
+    targetAllocations[Id.wrap(marketId)] = targetAllocation;
+  }
+
+  /** CHECK FUNCTIONS */
+
+  /// @notice Checks if reallocation is needed across all markets based on current and target utilizations.
+  /// @return bool Indicates if reallocation is needed.
+  /// @return marketAllocations The array of market allocations to be performed if reallocation is needed.
   function checkReallocationNeeded() public view returns (bool, MarketAllocation[] memory) {
     uint256 nbMarkets = IMetaMorpho(VAULT_ADDRESS).withdrawQueueLength();
 
@@ -99,6 +147,12 @@ contract TargetAllocator {
     return (false, new MarketAllocation[](0));
   }
 
+  /// @notice Checks a specific market to determine if reallocation is necessary based on its current utilization and target allocation settings.
+  /// @param marketId The market identifier to check.
+  /// @param idleAssetsAvailable The amount of assets available in the idle market that can be reallocated.
+  /// @param idleMarketParams The market parameters of the idle market.
+  /// @return bool Indicates if reallocation is needed for the market.
+  /// @return marketAllocations The array of market allocations to be performed if reallocation is needed.
   function checkMarket(
     Id marketId,
     uint256 idleAssetsAvailable,
@@ -183,7 +237,12 @@ contract TargetAllocator {
     return (false, marketAllocations);
   }
 
-  function keeperCheck() public view returns (bool, bytes memory call) {
+  /** KEEPER FUNCTIONS */
+
+  /// @notice Checks if a reallocation action is necessary and returns the encoded call data to perform the reallocation if so.
+  /// @return bool Indicates if a reallocation action should be taken.
+  /// @return call The encoded call data to execute the reallocation.
+  function keeperCheck() external view returns (bool, bytes memory call) {
     if (lastReallocationTimestamp + minDelayBetweenReallocations > block.timestamp) {
       return (false, call);
     }
@@ -199,6 +258,8 @@ contract TargetAllocator {
     return (false, call);
   }
 
+  /// @notice Executes a reallocation action based on call data provided by the keeperCheck function.
+  /// @param call The encoded call data for the reallocation action.
   function keeperCall(bytes calldata call) external {
     require(msg.sender == keeperAddress || isVaultAllocator(msg.sender), "TargetAllocator: caller not allowed");
 
@@ -210,6 +271,9 @@ contract TargetAllocator {
     }
   }
 
+  /// @notice Checks if the sender is an authorized vault allocator.
+  /// @param sender The address to check.
+  /// @return bool Indicates if the address is an authorized allocator.
   function isVaultAllocator(address sender) public view returns (bool) {
     return IMetaMorpho(VAULT_ADDRESS).isAllocator(sender);
   }
