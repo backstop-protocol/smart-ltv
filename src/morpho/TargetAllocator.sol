@@ -130,7 +130,7 @@ contract TargetAllocator {
     uint256 nbMarkets = IMetaMorpho(VAULT_ADDRESS).withdrawQueueLength();
 
     MarketParams memory idleMarketParams = MORPHO.idToMarketParams(IDLE_MARKET_ID);
-    uint256 idleAssetsAvailable = 0;
+    uint256 idleAssetsAvailable = getAvailableIdleAssets(idleMarketParams);
     for (uint256 i = 0; i < nbMarkets; i++) {
       Id marketId = IMetaMorpho(VAULT_ADDRESS).withdrawQueue(i);
       (bool mustReallocate, MarketAllocation[] memory allocations) = checkMarket(
@@ -145,6 +145,22 @@ contract TargetAllocator {
     }
 
     return (false, new MarketAllocation[](0));
+  }
+
+  /// @notice Gets the available assets of the vault currently in the idle market.
+  /// @return uint256 Amount of assets available in to be reallocated from the idle market
+  function getAvailableIdleAssets(MarketParams memory idleMarketParams) public view returns (uint256) {
+    (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, ) = MORPHO.expectedMarketBalances(
+      idleMarketParams
+    );
+
+    uint256 supplyShares = MORPHO.supplyShares(IDLE_MARKET_ID, VAULT_ADDRESS);
+    uint256 supplyAssets = supplyShares.toAssetsDown(totalSupplyAssets, totalSupplyShares);
+    uint256 availableLiquidity = totalSupplyAssets - totalBorrowAssets;
+
+    uint256 idleAssetsAvailable = UtilsLib.min(supplyAssets, availableLiquidity);
+
+    return idleAssetsAvailable;
   }
 
   /// @notice Checks a specific market to determine if reallocation is necessary based on its current utilization and target allocation settings.
