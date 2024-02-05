@@ -23,6 +23,8 @@ contract IntegrationTestReallocateCheck is Test {
   address allocator = address(0x01010101010101);
   address notAllocator = address(0x02020202020202);
 
+  uint256 public nbBlockToSkip = 7126;
+
   function toPercentageString(uint256 value) public pure returns (string memory) {
     require(value <= 1e20, "Value too large");
 
@@ -173,14 +175,14 @@ contract IntegrationTestReallocateCheck is Test {
 
     // finalJson = vm.serializeString(obj1, "object", output);
     // console.log(finalJson);
-    // displayMarketStatus("BEFORE", ETH_VAULT);
+    displayMarketStatus("BEFORE", ETH_VAULT);
     vm.prank(allocator);
     emergencyContract.withdrawETH();
     // // displayMarketStatus("AFTER", ETH_VAULT);
     // // console.log("block %s, timestamp %s", block.number, block.timestamp);
-    vm.roll(block.number + (7126 * 7));
-    vm.warp(block.timestamp + (7126 * 7 * 12));
+    vm.roll(block.number + (nbBlockToSkip * 7));
+    vm.warp(block.timestamp + (nbBlockToSkip * 7 * 12));
     // // console.log("block %s, timestamp %s", block.number, block.timestamp);
-    displayMarketStatus("AFTER 1 WEEK", ETH_VAULT);
+    displayMarketStatus("AFTER", ETH_VAULT);
   }
 }
