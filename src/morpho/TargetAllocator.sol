@@ -219,6 +219,12 @@ contract TargetAllocator {
       // utilization < min target utilization, we should withdraw to the idle market
 
       // Keep at least targetAllocation.minLiquidity available
+      // this is done because if total supply = 10, total borrow = 5 target utilization = 80% and minLiquidity = 4
+      // currently, available liquidity is 10 - 5 = 5 and the current utilization is 50%
+      // so to reach 80% we would need to lower the supply to 6.25 => 5/6.25 = 0.8. But if we do that,
+      // the remaining liquidity will be 6.25 - 5 = 1.25 which is < 4
+      // in this case we will then define the targetTotalSupplyAssets as totalBorrowAssets + targetAllocation.minLiquidity => (5 + 4) = 9
+      // this mean a utilization of 55%, better than the current 50% but keeping the minLiquidity as desired
       if (targetTotalSupplyAssets < totalBorrowAssets + targetAllocation.minLiquidity) {
         targetTotalSupplyAssets = totalBorrowAssets + targetAllocation.minLiquidity;
       }
