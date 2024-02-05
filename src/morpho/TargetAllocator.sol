@@ -34,12 +34,16 @@ contract TargetAllocator {
 
   uint256 public lastReallocationTimestamp;
 
+  // TODO setter
   uint256 public minDelayBetweenReallocations;
 
+  // TODO setter
   mapping(Id => TargetAllocation) public targetAllocations;
 
+  // TODO setter
   uint256 public minReallocationSize;
 
+  // TODO setter
   address public keeperAddress;
 
   constructor(
@@ -93,22 +97,6 @@ contract TargetAllocator {
     }
 
     return (false, new MarketAllocation[](0));
-  }
-
-  function keeperCheck() public view returns (bool, bytes memory call) {
-    if (lastReallocationTimestamp + minDelayBetweenReallocations > block.timestamp) {
-      return (false, call);
-    }
-
-    (bool mustReallocate, MarketAllocation[] memory allocations) = checkReallocationNeeded();
-
-    if (mustReallocate) {
-      call = abi.encodeCall(IMetaMorphoBase.reallocate, allocations);
-      return (true, call);
-    }
-
-    // return false for the gelato bot
-    return (false, call);
   }
 
   function checkMarket(
@@ -193,6 +181,22 @@ contract TargetAllocator {
     }
 
     return (false, marketAllocations);
+  }
+
+  function keeperCheck() public view returns (bool, bytes memory call) {
+    if (lastReallocationTimestamp + minDelayBetweenReallocations > block.timestamp) {
+      return (false, call);
+    }
+
+    (bool mustReallocate, MarketAllocation[] memory allocations) = checkReallocationNeeded();
+
+    if (mustReallocate) {
+      call = abi.encodeCall(IMetaMorphoBase.reallocate, allocations);
+      return (true, call);
+    }
+
+    // return false for the gelato bot
+    return (false, call);
   }
 
   function keeperCall(bytes calldata call) external {
