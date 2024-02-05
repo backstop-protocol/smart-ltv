@@ -276,7 +276,7 @@ contract TargetAllocator {
       return (true, call);
     }
 
-    // return false for the gelato bot
+    // return false for the keeper bot
     return (false, call);
   }
 
