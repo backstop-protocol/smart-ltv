@@ -210,7 +210,10 @@ contract TargetAllocator {
 
       marketAllocations = new MarketAllocation[](2);
       // create allocation: withdraw from idle
-      marketAllocations[0] = MarketAllocation({marketParams: idleMarketParams, assets: amountToSupply});
+      marketAllocations[0] = MarketAllocation({
+        marketParams: idleMarketParams,
+        assets: idleAssetsAvailable - amountToSupply
+      });
       // create allocation: supply all withdrawn to market
       marketAllocations[1] = MarketAllocation({marketParams: marketParams, assets: type(uint256).max});
 

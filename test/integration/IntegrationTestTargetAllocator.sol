@@ -13,6 +13,7 @@ import {MathLib, WAD} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/M
 import {SharesMathLib} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/SharesMathLib.sol";
 import {MarketParamsLib, MarketParams} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/MarketParamsLib.sol";
 import {IMetaMorpho, IMetaMorphoBase, MarketAllocation, Id, MarketConfig} from "../../lib/metamorpho/src/interfaces/IMetaMorpho.sol";
+import {TestUtils} from "../TestUtils.sol";
 
 /// @notice
 /// launch with: forge test --match-contract IntegrationTestTargetAllocator --rpc-url {MAINNET RPC URL} -vvv
@@ -122,5 +123,55 @@ contract IntegrationTestTargetAllocator is Test {
 
     assertEq(USDC_IDLE_MARKET, Id.unwrap(usdcTargetAllocator.IDLE_MARKET_ID()));
     assertEq(ETH_IDLE_MARKET, Id.unwrap(ethTargetAllocator.IDLE_MARKET_ID()));
+
+    assertEq(USDC_VAULT, usdcTargetAllocator.VAULT_ADDRESS());
+    assertEq(ETH_VAULT, ethTargetAllocator.VAULT_ADDRESS());
+  }
+
+  function testReallocationNeededEth() public {
+    (bool reallocationNeeded, MarketAllocation[] memory allocations) = ethTargetAllocator.checkReallocationNeeded();
+    if (reallocationNeeded) {
+      TestUtils.displayMarketStatus("BEFORE", IMetaMorpho(ethTargetAllocator.VAULT_ADDRESS()), MORPHO);
+      console.log("%s reallocations on ETH vault", allocations.length);
+      for (uint i = 0; i < allocations.length; i++) {
+        displayAllocationAsLog(allocations[i]);
+      }
+
+      (, bytes memory call) = ethTargetAllocator.keeperCheck();
+      vm.prank(allocator);
+      ethTargetAllocator.keeperCall(call);
+
+      TestUtils.displayMarketStatus("AFTER", IMetaMorpho(ethTargetAllocator.VAULT_ADDRESS()), MORPHO);
+    } else {
+      console.log("No reallocations on ETH vault");
+    }
+  }
+
+  function testReallocationNeededUsdc() public {
+    (bool reallocationNeeded, MarketAllocation[] memory allocations) = usdcTargetAllocator.checkReallocationNeeded();
+    if (reallocationNeeded) {
+      TestUtils.displayMarketStatus("BEFORE", IMetaMorpho(usdcTargetAllocator.VAULT_ADDRESS()), MORPHO);
+      console.log("%s reallocations on USDC vault", allocations.length);
+      for (uint i = 0; i < allocations.length; i++) {
+        displayAllocationAsLog(allocations[i]);
+      }
+
+      (, bytes memory call) = usdcTargetAllocator.keeperCheck();
+      vm.prank(allocator);
+      usdcTargetAllocator.keeperCall(call);
+
+      TestUtils.displayMarketStatus("AFTER", IMetaMorpho(usdcTargetAllocator.VAULT_ADDRESS()), MORPHO);
+    } else {
+      console.log("No reallocations on USDC vault");
+    }
+  }
+
+  function displayAllocationAsLog(MarketAllocation memory allocation) public view {
+    console.log(
+      "%s market (%s), assets: %s",
+      TestUtils.addressToSymbol(allocation.marketParams.collateralToken),
+      TestUtils.toPercentageString(allocation.marketParams.lltv),
+      allocation.assets == type(uint256).max ? "MAX" : TestUtils.uintToString(allocation.assets)
+    );
   }
 }
