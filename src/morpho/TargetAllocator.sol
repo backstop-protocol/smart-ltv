@@ -94,21 +94,21 @@ contract TargetAllocator {
 
   /// @notice Sets the minimum delay between reallocations.
   /// @param _newValue The new minimum delay value in seconds.
-  function SetMinDelayBetweenReallocations(uint256 _newValue) external {
+  function setMinDelayBetweenReallocations(uint256 _newValue) external {
     require(isVaultAllocator(msg.sender), "TargetAllocator: caller not allowed");
     minDelayBetweenReallocations = _newValue;
   }
 
   /// @notice Sets the minimum size for reallocations to avoid transactions for negligible amounts.
   /// @param _newValue The new minimum reallocation size in the asset's smallest unit.
-  function SetMinReallocationSize(uint256 _newValue) external {
+  function setMinReallocationSize(uint256 _newValue) external {
     require(isVaultAllocator(msg.sender), "TargetAllocator: caller not allowed");
     minReallocationSize = _newValue;
   }
 
   /// @notice Sets the keeper address responsible for triggering reallocations.
   /// @param _newValue The new address of the keeper.
-  function SetKeeperAddress(address _newValue) external {
+  function setKeeperAddress(address _newValue) external {
     require(isVaultAllocator(msg.sender), "TargetAllocator: caller not allowed");
     keeperAddress = _newValue;
   }
@@ -116,7 +116,7 @@ contract TargetAllocator {
   /// @notice Sets target allocation parameters for a given market.
   /// @param marketId The market identifier for which to set the target allocation.
   /// @param targetAllocation The target allocation parameters including max, target, and min utilization percentages, and min liquidity.
-  function SetTargetAllocation(bytes32 marketId, TargetAllocation memory targetAllocation) external {
+  function setTargetAllocation(bytes32 marketId, TargetAllocation memory targetAllocation) external {
     require(isVaultAllocator(msg.sender), "TargetAllocator: caller not allowed");
     targetAllocations[Id.wrap(marketId)] = targetAllocation;
   }
