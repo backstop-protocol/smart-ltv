@@ -3,9 +3,10 @@ pragma solidity ^0.8.2;
 
 import "../../lib/forge-std/src/Test.sol";
 import {TargetAllocator} from "../../src/morpho/TargetAllocator.sol";
+import {IERC20Metadata} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {ERC20} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
 import {Market, Position} from "../../lib/metamorpho/lib/morpho-blue/src/interfaces/IMorpho.sol";
-import {IERC20Metadata} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {IMorpho} from "../../lib/metamorpho/lib/morpho-blue/src/interfaces/IMorpho.sol";
 import {MorphoLib} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/periphery/MorphoLib.sol";
 import {MorphoBalancesLib} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/periphery/MorphoBalancesLib.sol";
@@ -14,6 +15,12 @@ import {SharesMathLib} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/
 import {MarketParamsLib, MarketParams} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/MarketParamsLib.sol";
 import {IMetaMorpho, IMetaMorphoBase, MarketAllocation, Id, MarketConfig} from "../../lib/metamorpho/src/interfaces/IMetaMorpho.sol";
 import {TestUtils} from "../TestUtils.sol";
+
+interface FiatTokenV1 {
+  function masterMinter() external returns (address);
+  function mint(address _to, uint256 _amount) external returns (bool);
+  function configureMinter(address minter, uint256 minterAmount) external returns (bool);
+}
 
 /// @notice
 /// launch with: forge test --match-contract IntegrationTestTargetAllocator --rpc-url {MAINNET RPC URL} -vvv
@@ -166,6 +173,60 @@ contract IntegrationTestTargetAllocator is Test {
     }
   }
 
+  function testUsdcVaultTo50Percent() public {
+    IMetaMorpho vault = IMetaMorpho(USDC_VAULT);
+    TestUtils.displayMarketStatus("BEFORE", vault, MORPHO);
+    // change the onchain parameter so that the current utilization of each market to be 50%
+    setUpVaultMarketsToXPctUtilization(vault, 0.5e18);
+    TestUtils.displayMarketStatus("AFTER", vault, MORPHO);
+  }
+
+  function testETHVaultTo50Percent() public {
+    IMetaMorpho vault = IMetaMorpho(ETH_VAULT);
+    TestUtils.displayMarketStatus("BEFORE", vault, MORPHO);
+    // change the onchain parameter so that the current utilization of each market to be 50%
+    setUpVaultMarketsToXPctUtilization(vault, 0.5e18);
+    TestUtils.displayMarketStatus("AFTER", vault, MORPHO);
+  }
+
+  function setUpVaultMarketsToXPctUtilization(IMetaMorpho vault, uint256 pctTarget) public {
+    // function deal(address token, address to, uint256 give)
+    // give 1B asset to this
+    uint256 dealAmount = 1_000_000_000 * 10 ** IERC20Metadata(vault.asset()).decimals();
+    dealToken(vault.asset(), address(this), dealAmount);
+    ERC20(vault.asset()).approve(address(MORPHO), dealAmount);
+
+    uint256 nbMarkets = vault.withdrawQueueLength();
+    for (uint i = 0; i < nbMarkets; i++) {
+      Id marketId = vault.withdrawQueue(i);
+      MarketParams memory marketParams = MORPHO.idToMarketParams(marketId);
+      if (marketParams.collateralToken != address(0)) {
+        Market memory m = MORPHO.market(marketId);
+        uint256 pctUtilization = (uint256(m.totalBorrowAssets) * 1e18) / uint256(m.totalSupplyAssets);
+        if (pctUtilization >= pctTarget) {
+          // NEEDS TO ADD SUPPLY TO LOWER THE UTILIZATION TO 50%
+          // supplyToAdd => borrow x2 minus already supplied
+          uint256 targetSupply = (uint256(m.totalBorrowAssets) * 1e18) / pctTarget;
+          uint256 supplyToAdd = targetSupply - uint256(m.totalSupplyAssets);
+          MORPHO.supply(marketParams, supplyToAdd, 0, address(vault), "");
+        } else {
+          // NEEDS TO BORROW TO MAKE THE UTILIZATION HIGHER
+          uint256 targetBorrow = (uint256(m.totalSupplyAssets) * pctTarget) / 1e18;
+          uint256 amountToBorrow = targetBorrow - uint256(m.totalBorrowAssets);
+          uint256 amountCollateral = 1_000_000_000 * 10 ** IERC20Metadata(marketParams.collateralToken).decimals();
+          dealToken(marketParams.collateralToken, address(this), amountCollateral);
+          ERC20(marketParams.collateralToken).approve(address(MORPHO), amountCollateral);
+          MORPHO.supplyCollateral(marketParams, amountCollateral, address(this), "");
+          MORPHO.borrow(marketParams, amountToBorrow, 0, address(this), address(this));
+        }
+      } else {
+        // supply 10_000_000 to the idle market onBehalf of the vault
+        uint256 amountToSupplyToIdle = 10_000_000 * 10 ** IERC20Metadata(vault.asset()).decimals();
+        MORPHO.supply(marketParams, amountToSupplyToIdle, 0, address(vault), "");
+      }
+    }
+  }
+
   function displayAllocationAsLog(MarketAllocation memory allocation) public view {
     console.log(
       "%s market (%s), assets: %s",
@@ -173,5 +234,19 @@ contract IntegrationTestTargetAllocator is Test {
       TestUtils.toPercentageString(allocation.marketParams.lltv),
       allocation.assets == type(uint256).max ? "MAX" : TestUtils.uintToString(allocation.assets)
     );
+  }
+
+  function dealToken(address token, address to, uint256 amount) public {
+    address usdc = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+
+    if (token == usdc) {
+      // if usdc, needs to mint as the master minter
+      address masterMint = FiatTokenV1(usdc).masterMinter();
+      vm.prank(masterMint);
+      FiatTokenV1(usdc).configureMinter(address(this), type(uint256).max);
+      FiatTokenV1(usdc).mint(to, amount);
+    } else {
+      deal(token, address(this), amount);
+    }
   }
 }

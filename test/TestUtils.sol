@@ -98,7 +98,7 @@ library TestUtils {
 
   function addressToSymbol(address _addr) public view returns (string memory) {
     if (_addr == address(0)) {
-      return "idle";
+      return "IDLE";
     } else {
       return IERC20Metadata(_addr).symbol();
     }
@@ -131,17 +131,19 @@ library TestUtils {
       MarketParams memory marketParams = morpho.idToMarketParams(marketId);
 
       uint256 supply = getAssetSupplyForId(marketId, address(vault), morpho);
-      string memory logToDisplay = string.concat("collateral ", addressToSymbol(marketParams.collateralToken));
+      string memory logToDisplay = string.concat(addressToSymbol(marketParams.collateralToken), " market");
       logToDisplay = string.concat(logToDisplay, " | ltv ");
       logToDisplay = string.concat(logToDisplay, toPercentageString(marketParams.lltv));
       logToDisplay = string.concat(logToDisplay, " | vault supply ");
       logToDisplay = string.concat(logToDisplay, uintToString(supply));
       logToDisplay = string.concat(logToDisplay, " | total supply ");
       logToDisplay = string.concat(logToDisplay, uintToString(m.totalSupplyAssets));
-      logToDisplay = string.concat(logToDisplay, " | borrow ");
+      logToDisplay = string.concat(logToDisplay, " | total borrow ");
       logToDisplay = string.concat(logToDisplay, uintToString(m.totalBorrowAssets));
       logToDisplay = string.concat(logToDisplay, " | utilization ");
-      uint256 utilization = (uint256(m.totalBorrowAssets) * 1e18) / uint256(m.totalSupplyAssets);
+      uint256 utilization = m.totalSupplyAssets == 0
+        ? 0
+        : (uint256(m.totalBorrowAssets) * 1e18) / uint256(m.totalSupplyAssets);
       logToDisplay = string.concat(logToDisplay, toPercentageString(utilization));
 
       console.log(logToDisplay);
