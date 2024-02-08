@@ -84,7 +84,7 @@ contract IntegrationTestTargetAllocator is Test {
       USDC_IDLE_MARKET,
       USDC_VAULT,
       120,
-      1000e6,
+      1, // 1 wei of usdc for testing purpose
       keeper,
       marketIds,
       targetAllocations
@@ -116,7 +116,7 @@ contract IntegrationTestTargetAllocator is Test {
       ETH_IDLE_MARKET,
       ETH_VAULT,
       120,
-      10e18,
+      1, // 1 wei of eth for testing purpose
       keeper,
       marketIds,
       targetAllocations
@@ -135,58 +135,154 @@ contract IntegrationTestTargetAllocator is Test {
     assertEq(ETH_VAULT, ethTargetAllocator.VAULT_ADDRESS());
   }
 
-  function testReallocationNeededEth() public {
-    (bool reallocationNeeded, MarketAllocation[] memory allocations) = ethTargetAllocator.checkReallocationNeeded();
-    if (reallocationNeeded) {
-      TestUtils.displayMarketStatus("BEFORE", IMetaMorpho(ethTargetAllocator.VAULT_ADDRESS()), MORPHO);
-      console.log("%s reallocations on ETH vault", allocations.length);
-      for (uint i = 0; i < allocations.length; i++) {
-        displayAllocationAsLog(allocations[i]);
-      }
+  /// @notice set the utilization for each markets to 90% and then call checkReallocation needed
+  /// it should reallocate supply to the first market in the list to decrease the utilization to the setUp target parameter
+  /// of 75%
+  function testReallocationUsdcDecreaseUtilization() public {
+    // this methods set all non-idle markets to 90% utilization
+    // and also add 10M tokens to the idle market supply
+    setUpVaultMarketsToXPctUtilization(IMetaMorpho(USDC_VAULT), 0.9e18);
 
-      (, bytes memory call) = ethTargetAllocator.keeperCheck();
-      vm.prank(allocator);
-      ethTargetAllocator.keeperCall(call);
-
-      TestUtils.displayMarketStatus("AFTER", IMetaMorpho(ethTargetAllocator.VAULT_ADDRESS()), MORPHO);
-    } else {
-      console.log("No reallocations on ETH vault");
-    }
-  }
-
-  function testReallocationNeededUsdc() public {
     (bool reallocationNeeded, MarketAllocation[] memory allocations) = usdcTargetAllocator.checkReallocationNeeded();
-    if (reallocationNeeded) {
-      TestUtils.displayMarketStatus("BEFORE", IMetaMorpho(usdcTargetAllocator.VAULT_ADDRESS()), MORPHO);
-      console.log("%s reallocations on USDC vault", allocations.length);
-      for (uint i = 0; i < allocations.length; i++) {
-        displayAllocationAsLog(allocations[i]);
+    assertTrue(reallocationNeeded);
+    TestUtils.displayMarketStatus("BEFORE", IMetaMorpho(usdcTargetAllocator.VAULT_ADDRESS()), MORPHO);
+    MarketParams memory changedMarket;
+    for (uint i = 0; i < allocations.length; i++) {
+      // displayAllocationAsLog(allocations[i]);
+      if (allocations[i].marketParams.collateralToken != address(0)) {
+        changedMarket = allocations[i].marketParams;
       }
-
-      (, bytes memory call) = usdcTargetAllocator.keeperCheck();
-      vm.prank(allocator);
-      usdcTargetAllocator.keeperCall(call);
-
-      TestUtils.displayMarketStatus("AFTER", IMetaMorpho(usdcTargetAllocator.VAULT_ADDRESS()), MORPHO);
-    } else {
-      console.log("No reallocations on USDC vault");
     }
+
+    (, bytes memory call) = usdcTargetAllocator.keeperCheck();
+    vm.prank(allocator);
+    usdcTargetAllocator.keeperCall(call);
+    TestUtils.displayMarketStatus("AFTER", IMetaMorpho(usdcTargetAllocator.VAULT_ADDRESS()), MORPHO);
+
+    // compute utilization of the modified market
+    Market memory m = MORPHO.market(MarketParamsLib.id(changedMarket));
+    uint256 utilization = m.totalSupplyAssets == 0
+      ? 0
+      : (uint256(m.totalBorrowAssets) * 1e18) / uint256(m.totalSupplyAssets);
+
+    assertApproxEqAbs(utilization, 0.75e18, 0.01e18);
+
+    vm.roll(block.number + 100);
+    vm.warp(block.timestamp + 100 * 12);
+
+    // next market shoud now be the target
+    (bool newReallocationNeeded, MarketAllocation[] memory newAllocations) = usdcTargetAllocator
+      .checkReallocationNeeded();
+    assertTrue(newReallocationNeeded);
+    MarketParams memory newChangedMarket;
+    for (uint i = 0; i < newAllocations.length; i++) {
+      // displayAllocationAsLog(newAllocations[i]);
+      if (newAllocations[i].marketParams.collateralToken != address(0)) {
+        newChangedMarket = newAllocations[i].marketParams;
+      }
+    }
+
+    // assert new changed market is different than the fost
+    assertTrue(
+      newChangedMarket.collateralToken != changedMarket.collateralToken || newChangedMarket.lltv != changedMarket.lltv
+    );
+
+    (, call) = usdcTargetAllocator.keeperCheck();
+    vm.prank(allocator);
+    usdcTargetAllocator.keeperCall(call);
+    TestUtils.displayMarketStatus(
+      "AFTER SECOND REALLOCATION",
+      IMetaMorpho(usdcTargetAllocator.VAULT_ADDRESS()),
+      MORPHO
+    );
+
+    // recompute utilization of the new changed market
+    m = MORPHO.market(MarketParamsLib.id(newChangedMarket));
+    utilization = m.totalSupplyAssets == 0 ? 0 : (uint256(m.totalBorrowAssets) * 1e18) / uint256(m.totalSupplyAssets);
+
+    assertApproxEqAbs(utilization, 0.75e18, 0.01e18);
+
+    // if (reallocationNeeded) {
+    //   TestUtils.displayMarketStatus("BEFORE", IMetaMorpho(usdcTargetAllocator.VAULT_ADDRESS()), MORPHO);
+    //   console.log("%s reallocations on USDC vault", allocations.length);
+    //   for (uint i = 0; i < allocations.length; i++) {
+    //     displayAllocationAsLog(allocations[i]);
+    //   }
+
+    //   (, bytes memory call) = usdcTargetAllocator.keeperCheck();
+    //   vm.prank(allocator);
+    //   usdcTargetAllocator.keeperCall(call);
+
+    //   TestUtils.displayMarketStatus("AFTER", IMetaMorpho(usdcTargetAllocator.VAULT_ADDRESS()), MORPHO);
+    // } else {
+    //   console.log("No reallocations on USDC vault");
+    // }
   }
 
-  function testUsdcVaultTo50Percent() public {
-    IMetaMorpho vault = IMetaMorpho(USDC_VAULT);
-    TestUtils.displayMarketStatus("BEFORE", vault, MORPHO);
-    // change the onchain parameter so that the current utilization of each market to be 50%
-    setUpVaultMarketsToXPctUtilization(vault, 0.5e18);
-    TestUtils.displayMarketStatus("AFTER", vault, MORPHO);
+  /// @notice set the utilization for each markets to 90% and then call checkReallocation needed
+  /// it should reallocate supply to the first market in the list to decrease the utilization to the setUp target parameter
+  /// of 75%
+  function testReallocationEthDecreaseUtilization() public {
+    // this methods set all non-idle markets to 90% utilization
+    // and also add 10M tokens to the idle market supply
+    setUpVaultMarketsToXPctUtilization(IMetaMorpho(ETH_VAULT), 0.9e18);
+
+    (bool reallocationNeeded, MarketAllocation[] memory allocations) = ethTargetAllocator.checkReallocationNeeded();
+    assertTrue(reallocationNeeded);
+    TestUtils.displayMarketStatus("BEFORE", IMetaMorpho(ethTargetAllocator.VAULT_ADDRESS()), MORPHO);
+    MarketParams memory changedMarket;
+    for (uint i = 0; i < allocations.length; i++) {
+      // displayAllocationAsLog(allocations[i]);
+      if (allocations[i].marketParams.collateralToken != address(0)) {
+        changedMarket = allocations[i].marketParams;
+      }
+    }
+
+    (, bytes memory call) = ethTargetAllocator.keeperCheck();
+    vm.prank(allocator);
+    ethTargetAllocator.keeperCall(call);
+    TestUtils.displayMarketStatus("AFTER", IMetaMorpho(ethTargetAllocator.VAULT_ADDRESS()), MORPHO);
+
+    // compute utilization of the modified market
+    Market memory m = MORPHO.market(MarketParamsLib.id(changedMarket));
+    uint256 utilization = m.totalSupplyAssets == 0
+      ? 0
+      : (uint256(m.totalBorrowAssets) * 1e18) / uint256(m.totalSupplyAssets);
+
+    assertApproxEqAbs(utilization, 0.75e18, 0.01e18);
   }
 
-  function testETHVaultTo50Percent() public {
-    IMetaMorpho vault = IMetaMorpho(ETH_VAULT);
-    TestUtils.displayMarketStatus("BEFORE", vault, MORPHO);
-    // change the onchain parameter so that the current utilization of each market to be 50%
-    setUpVaultMarketsToXPctUtilization(vault, 0.5e18);
-    TestUtils.displayMarketStatus("AFTER", vault, MORPHO);
+  /// @notice set the utilization for each markets to 10% and then call checkReallocation needed
+  /// it should reallocate supply to the first market in the list to increase the utilization to the setUp target parameter
+  /// of 75%
+  function testReallocationEthIncreaseUtilization() public {
+    // this methods set all non-idle markets to 10% utilization
+    // and also add 10M tokens to the idle market supply
+    setUpVaultMarketsToXPctUtilization(IMetaMorpho(ETH_VAULT), 0.1e18);
+
+    (bool reallocationNeeded, MarketAllocation[] memory allocations) = ethTargetAllocator.checkReallocationNeeded();
+    assertTrue(reallocationNeeded);
+    TestUtils.displayMarketStatus("BEFORE", IMetaMorpho(ethTargetAllocator.VAULT_ADDRESS()), MORPHO);
+    MarketParams memory changedMarket;
+    for (uint i = 0; i < allocations.length; i++) {
+      // displayAllocationAsLog(allocations[i]);
+      if (allocations[i].marketParams.collateralToken != address(0)) {
+        changedMarket = allocations[i].marketParams;
+      }
+    }
+
+    (, bytes memory call) = ethTargetAllocator.keeperCheck();
+    vm.prank(allocator);
+    ethTargetAllocator.keeperCall(call);
+    TestUtils.displayMarketStatus("AFTER", IMetaMorpho(ethTargetAllocator.VAULT_ADDRESS()), MORPHO);
+
+    // compute utilization of the modified market
+    Market memory m = MORPHO.market(MarketParamsLib.id(changedMarket));
+    uint256 utilization = m.totalSupplyAssets == 0
+      ? 0
+      : (uint256(m.totalBorrowAssets) * 1e18) / uint256(m.totalSupplyAssets);
+
+    assertApproxEqAbs(utilization, 0.75e18, 0.01e18);
   }
 
   function setUpVaultMarketsToXPctUtilization(IMetaMorpho vault, uint256 pctTarget) public {
