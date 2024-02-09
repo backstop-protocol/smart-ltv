@@ -79,7 +79,7 @@ contract IntegrationTestTargetAllocator is Test {
         });
       }
     }
-    
+
     usdcTargetAllocator = new TargetAllocator(
       USDC_IDLE_MARKET,
       USDC_VAULT,
@@ -135,12 +135,38 @@ contract IntegrationTestTargetAllocator is Test {
     assertEq(ETH_VAULT, ethTargetAllocator.VAULT_ADDRESS());
   }
 
+  function testUsdcNoReallocationNeededIfUtilizationUnderInThreshold() public {
+    setUpVaultMarketsToXPctUtilization(IMetaMorpho(USDC_VAULT), 0.71e18);
+
+    (bool reallocationNeeded, ) = usdcTargetAllocator.checkReallocationNeeded();
+    assertFalse(reallocationNeeded);
+  }
+
+  function testEthNoReallocationNeededIfUtilizationUnderInThreshold() public {
+    setUpVaultMarketsToXPctUtilization(IMetaMorpho(ETH_VAULT), 0.71e18);
+
+    (bool reallocationNeeded, ) = ethTargetAllocator.checkReallocationNeeded();
+    assertFalse(reallocationNeeded);
+  }
+
+  function testUsdcNoReallocationNeededIfUtilizationOverInThreshold() public {
+    setUpVaultMarketsToXPctUtilization(IMetaMorpho(USDC_VAULT), 0.78e18);
+
+    (bool reallocationNeeded, ) = usdcTargetAllocator.checkReallocationNeeded();
+    assertFalse(reallocationNeeded);
+  }
+
+  function testEthNoReallocationNeededIfUtilizationOverInThreshold() public {
+    setUpVaultMarketsToXPctUtilization(IMetaMorpho(ETH_VAULT), 0.78e18);
+
+    (bool reallocationNeeded, ) = ethTargetAllocator.checkReallocationNeeded();
+    assertFalse(reallocationNeeded);
+  }
+
   /// @notice set the utilization for each markets to 90% and then call checkReallocation needed
   /// it should reallocate supply to the first market in the list to decrease the utilization to the setUp target parameter
   /// of 75%
   function testReallocationUsdcDecreaseUtilization() public {
-    // this methods set all non-idle markets to 90% utilization
-    // and also add 10M tokens to the idle market supply
     setUpVaultMarketsToXPctUtilization(IMetaMorpho(USDC_VAULT), 0.9e18);
 
     (bool reallocationNeeded, MarketAllocation[] memory allocations) = usdcTargetAllocator.checkReallocationNeeded();
@@ -207,8 +233,6 @@ contract IntegrationTestTargetAllocator is Test {
   /// it should reallocate supply from the first market in the list to increase the utilization to the setUp target parameter
   /// of 75%
   function testReallocationUsdcIncreaseUtilization() public {
-    // this methods set all non-idle markets to 90% utilization
-    // and also add 10M tokens to the idle market supply
     setUpVaultMarketsToXPctUtilization(IMetaMorpho(USDC_VAULT), 0.1e18);
 
     (bool reallocationNeeded, MarketAllocation[] memory allocations) = usdcTargetAllocator.checkReallocationNeeded();
@@ -275,8 +299,6 @@ contract IntegrationTestTargetAllocator is Test {
   /// it should reallocate supply to the first market in the list to decrease the utilization to the setUp target parameter
   /// of 75%
   function testReallocationEthDecreaseUtilization() public {
-    // this methods set all non-idle markets to 90% utilization
-    // and also add 10M tokens to the idle market supply
     setUpVaultMarketsToXPctUtilization(IMetaMorpho(ETH_VAULT), 0.9e18);
 
     (bool reallocationNeeded, MarketAllocation[] memory allocations) = ethTargetAllocator.checkReallocationNeeded();
@@ -309,7 +331,7 @@ contract IntegrationTestTargetAllocator is Test {
   /// of 75%
   function testReallocationEthIncreaseUtilization() public {
     // this methods set all non-idle markets to 10% utilization
-    // and also add 10M tokens to the idle market supply
+
     setUpVaultMarketsToXPctUtilization(IMetaMorpho(ETH_VAULT), 0.1e18);
 
     (bool reallocationNeeded, MarketAllocation[] memory allocations) = ethTargetAllocator.checkReallocationNeeded();
