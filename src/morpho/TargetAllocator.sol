@@ -194,6 +194,7 @@ contract TargetAllocator {
 
     // compute utilization and target total supply assets
     uint256 currentUtilization = (totalBorrowAssets * 1e18) / totalSupplyAssets;
+
     uint256 targetTotalSupplyAssets = (totalBorrowAssets * 1e18) / targetAllocation.targetUtilization;
 
     // check if we need to reallocate
@@ -257,8 +258,8 @@ contract TargetAllocator {
       marketAllocations[0] = MarketAllocation({
         marketParams: marketParams,
         // new assets value for the non idle market
-        // = current supply minus amount to withdraw
-        assets: totalSupplyAssets - amountToWithdraw
+        // = current vault supply minus amount to withdraw
+        assets: supplyAssets - amountToWithdraw
       });
       // create allocation: supply all withdrawn to idle market
       marketAllocations[1] = MarketAllocation({marketParams: idleMarketParams, assets: type(uint256).max});
