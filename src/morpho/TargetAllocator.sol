@@ -91,7 +91,7 @@ contract TargetAllocator {
     }
   }
 
-  function getTargetAllocation(Id id) public view returns(TargetAllocation memory) {
+  function getTargetAllocation(Id id) public view returns (TargetAllocation memory) {
     return targetAllocations[id];
   }
 
@@ -131,19 +131,19 @@ contract TargetAllocator {
   /// @notice Checks if reallocation is needed across all markets based on current and target utilizations.
   /// @return bool Indicates if reallocation is needed.
   /// @return marketAllocations The array of market allocations to be performed if reallocation is needed.
-  function checkReallocationNeeded(bytes memory checkerBytecode) public /*view*/ returns (bool, MarketAllocation[] memory) {
-      // deploy
-      address child;
-      assembly{
-        mstore(0x0, checkerBytecode)
-        child := create(0,0xa0, calldatasize())
-      }
-      IReallocationLogic logic = IReallocationLogic(child);
-      
-      // set params
-      logic.setParams(this, VAULT_ADDRESS, MORPHO, IDLE_MARKET_ID, minReallocationSize);
+  function checkReallocationNeeded(bytes memory checkerBytecode) public returns (bool, MarketAllocation[] memory) {
+    // deploy
+    address child;
+    assembly {
+      mstore(0x0, checkerBytecode)
+      child := create(0, 0xa0, calldatasize())
+    }
+    IReallocationLogic logic = IReallocationLogic(child);
 
-      return logic.checkReallocationNeeded();
+    // set params
+    logic.setParams(this, VAULT_ADDRESS, MORPHO, IDLE_MARKET_ID, minReallocationSize);
+
+    return logic.checkReallocationNeeded();
   }
 
   /** KEEPER FUNCTIONS */
@@ -151,7 +151,7 @@ contract TargetAllocator {
   /// @notice Checks if a reallocation action is necessary and returns the encoded call data to perform the reallocation if so.
   /// @return bool Indicates if a reallocation action should be taken.
   /// @return call The encoded call data to execute the reallocation.
-  function keeperCheck(bytes memory checkerBytecode) external /*view*/ returns (bool, bytes memory call) {
+  function keeperCheck(bytes memory checkerBytecode) external returns (bool, bytes memory call) {
     if (lastReallocationTimestamp + minDelayBetweenReallocations > block.timestamp) {
       return (false, call);
     }

@@ -174,7 +174,9 @@ contract IntegrationTestTargetAllocator is Test {
   function testReallocationUsdcDecreaseUtilization() public {
     setUpVaultMarketsToXPctUtilization(IMetaMorpho(USDC_VAULT), 0.9e18);
 
-    (bool reallocationNeeded, MarketAllocation[] memory allocations) = usdcTargetAllocator.checkReallocationNeeded(REALLOCATE_LOGIC_CODE);
+    (bool reallocationNeeded, MarketAllocation[] memory allocations) = usdcTargetAllocator.checkReallocationNeeded(
+      REALLOCATE_LOGIC_CODE
+    );
     assertTrue(reallocationNeeded);
     TestUtils.displayMarketStatus("BEFORE", IMetaMorpho(usdcTargetAllocator.VAULT_ADDRESS()), MORPHO);
     MarketParams memory changedMarket;
@@ -240,7 +242,9 @@ contract IntegrationTestTargetAllocator is Test {
   function testReallocationUsdcIncreaseUtilization() public {
     setUpVaultMarketsToXPctUtilization(IMetaMorpho(USDC_VAULT), 0.1e18);
 
-    (bool reallocationNeeded, MarketAllocation[] memory allocations) = usdcTargetAllocator.checkReallocationNeeded(REALLOCATE_LOGIC_CODE);
+    (bool reallocationNeeded, MarketAllocation[] memory allocations) = usdcTargetAllocator.checkReallocationNeeded(
+      REALLOCATE_LOGIC_CODE
+    );
     assertTrue(reallocationNeeded);
     TestUtils.displayMarketStatus("BEFORE", IMetaMorpho(usdcTargetAllocator.VAULT_ADDRESS()), MORPHO);
     MarketParams memory changedMarket;
@@ -306,7 +310,9 @@ contract IntegrationTestTargetAllocator is Test {
   function testReallocationEthDecreaseUtilization() public {
     setUpVaultMarketsToXPctUtilization(IMetaMorpho(ETH_VAULT), 0.9e18);
 
-    (bool reallocationNeeded, MarketAllocation[] memory allocations) = ethTargetAllocator.checkReallocationNeeded(REALLOCATE_LOGIC_CODE);
+    (bool reallocationNeeded, MarketAllocation[] memory allocations) = ethTargetAllocator.checkReallocationNeeded(
+      REALLOCATE_LOGIC_CODE
+    );
     assertTrue(reallocationNeeded);
     TestUtils.displayMarketStatus("BEFORE", IMetaMorpho(ethTargetAllocator.VAULT_ADDRESS()), MORPHO);
     MarketParams memory changedMarket;
@@ -339,7 +345,9 @@ contract IntegrationTestTargetAllocator is Test {
 
     setUpVaultMarketsToXPctUtilization(IMetaMorpho(ETH_VAULT), 0.1e18);
 
-    (bool reallocationNeeded, MarketAllocation[] memory allocations) = ethTargetAllocator.checkReallocationNeeded(REALLOCATE_LOGIC_CODE);
+    (bool reallocationNeeded, MarketAllocation[] memory allocations) = ethTargetAllocator.checkReallocationNeeded(
+      REALLOCATE_LOGIC_CODE
+    );
     assertTrue(reallocationNeeded);
     TestUtils.displayMarketStatus("BEFORE", IMetaMorpho(ethTargetAllocator.VAULT_ADDRESS()), MORPHO);
     MarketParams memory changedMarket;
