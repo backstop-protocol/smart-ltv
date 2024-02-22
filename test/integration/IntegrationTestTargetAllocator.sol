@@ -140,6 +140,10 @@ contract IntegrationTestTargetAllocator is Test {
     assertEq(ETH_VAULT, ethTargetAllocator.VAULT_ADDRESS());
   }
 
+  function testLog() public {
+    emit DEBUG(REALLOCATE_LOGIC_CODE);
+  }
+
   function testUsdcNoReallocationNeededIfUtilizationUnderInThreshold() public {
     setUpVaultMarketsToXPctUtilization(IMetaMorpho(USDC_VAULT), 0.71e18);
 
