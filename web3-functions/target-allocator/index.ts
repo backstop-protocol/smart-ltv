@@ -22,6 +22,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const parameters: KeeperParameters = await ky.get(parametersUrl).json();
 
   console.log(`Max gas price: ${BigNumber.from(parameters.maxGasPriceWei).div(BigNumber.from(10**9)).toString()} GWei`);
+  console.log(`Current gas price: ${BigNumber.from(context.gelatoArgs.gasPrice.toString()).div(BigNumber.from(10**9)).toString()} GWei`);
   console.log(`checkerBytecode: ${parameters.checkerBytecode}`);
 
   if (

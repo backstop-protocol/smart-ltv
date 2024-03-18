@@ -7,8 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "start:target-allocator": "npx hardhat w3f-run target-allocator --logs --network ethereum",
-    "publish:target-allocator": "npx hardhat w3f-deploy target-allocator",
+    "debug:gelatofn": "npx hardhat w3f-run target-allocator --logs --network ethereum",
+    "publish:gelatofn": "npx hardhat w3f-deploy target-allocator",
     "test-unit": "forge test --match-path ./test/unit/**.sol",
     "test-integration": "forge test --match-path './test/integration/**' --fork-url $GOERLI_RPC_URL -vvv",
     "coverage": "forge coverage --match-path './test/unit/**' --report summary --report lcov",
