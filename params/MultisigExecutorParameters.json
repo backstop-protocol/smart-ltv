@@ -1,0 +1,5 @@
+{
+    "maxGasPriceWei": "50000000000",
+    "multisigAddresses": ["0xF89e9cf758EEd6ae41822DEe15945583C121d10e"],
+    "gnosisServiceUrl": "https://safe-transaction-mainnet.safe.global/api/v1"
+}
