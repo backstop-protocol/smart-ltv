@@ -91,7 +91,6 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
             concatSignatures // signatures
           ]);
 
-          console.log(encoded);
           return {
             canExec: true,
             callData: [
