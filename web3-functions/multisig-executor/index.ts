@@ -61,10 +61,14 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     if (pendingTxs.count > 0) {
       console.log(`[${safeAddress}] | ${pendingTxs.count} pending transactions`);
       for (const pendingTx of pendingTxs.results) {
+        if(pendingTx.nonce != safeInfo.nonce) {
+          console.log(`[${safeAddress}] | pending transaction ${pendingTx.safeTxHash} nonce: ${pendingTx.nonce}, safe nonce: ${safeInfo.nonce}. Ignoring`);
+          continue;
+        }
         console.log(`[${safeAddress}] | pending transaction ${pendingTx.safeTxHash} has ${pendingTx.confirmations.length}/${pendingTx.confirmationsRequired} confirmations`);
 
         if (pendingTx.confirmations.length >= pendingTx.confirmationsRequired) {
-          console.log(`[${safeAddress}] | will execute transaction ${pendingTx.safeTxHash}`);
+          console.log(`[${safeAddress}] | will execute transaction ${pendingTx.safeTxHash} with nonce ${pendingTx.nonce}`);
           const safeContract = new Contract(safeAddress, GNOSIS_SAFE_ABI, provider);
 
           let concatSignatures = '0x';
