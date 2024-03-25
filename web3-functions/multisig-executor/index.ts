@@ -17,27 +17,34 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     throw new Error(`Cannot get parameters url from userArgs: ${userArgs.parametersUrl}`);
   }
 
-  console.log("parametersUrl:", userArgs.parametersUrl);
+  // console.log("parametersUrl:", userArgs.parametersUrl);
 
   const provider = multiChainProvider.default();
 
-  console.log(`Reading parameters from ${parametersUrl}`);
+  // console.log(`Reading parameters from ${parametersUrl}`);
   const parameters: ExecutorParameters = await ky.get(parametersUrl).json();
   validateParameters(parameters);
 
-  console.log(
-    `Max gas price: ${BigNumber.from(parameters.maxGasPriceWei)
-      .div(BigNumber.from(10 ** 9))
-      .toString()} GWei`
-  );
-  console.log("Target multisigs:", parameters.multisigAddresses);
-  console.log("gnosisServiceUrl:", parameters.gnosisServiceUrl);
+  console.log(`PARAMETERS: Max gas price: ${BigNumber.from(parameters.maxGasPriceWei)
+    .div(BigNumber.from(10 ** 9))
+    .toString()} GWei | Service URL: ${parameters.gnosisServiceUrl} | Multisigs: ${parameters.multisigAddresses.join(',')}`)
+
+  if (
+    context.gelatoArgs.gasPrice.gt(BigNumber.from(parameters.maxGasPriceWei))
+  ) {
+    return {
+      canExec: false,
+      message: `Gas price too high: ${context.gelatoArgs.gasPrice.toString()} > ${
+        parameters.maxGasPriceWei
+      }`,
+    };
+  }
 
   for (const safeAddress of parameters.multisigAddresses) {
     console.log(`[${safeAddress}] | Working on safe ${safeAddress}`);
 
-    // get the nonce and the number of signatures
-    // get safe https://safe-transaction-mainnet.safe.global/api/v1/safes/0xF89e9cf758EEd6ae41822DEe15945583C121d10e/
+    // get the nonce
+    // get safe example https://safe-transaction-mainnet.safe.global/api/v1/safes/0xF89e9cf758EEd6ae41822DEe15945583C121d10e/
     const safeInfoUrl = `${parameters.gnosisServiceUrl}/safes/${safeAddress}/`;
     const safeInfo: SafeInfo = await ky.get(safeInfoUrl).json();
     if (safeInfo.nonce == undefined || Number.isNaN(safeInfo.nonce)) {
@@ -47,9 +54,9 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     console.log(`[${safeAddress}] | nonce: ${safeInfo.nonce}`);
 
     // get the pending transactions (if any)
-    // get tx https://safe-transaction-mainnet.safe.global/api/v1/safes/0xF89e9cf758EEd6ae41822DEe15945583C121d10e/multisig-transactions/?nonce__gte=5&executed=false
+    // get tx example https://safe-transaction-mainnet.safe.global/api/v1/safes/0xF89e9cf758EEd6ae41822DEe15945583C121d10e/multisig-transactions/?nonce__gte=5&executed=false
     const pendingTxUrl = `${parameters.gnosisServiceUrl}/safes/${safeAddress}/multisig-transactions/?nonce__gte=${safeInfo.nonce}&executed=false`
-    console.log(`pendingTxUrl : ${pendingTxUrl}`);
+    // console.log(`pendingTxUrl : ${pendingTxUrl}`);
     const pendingTxs: PendingTransactions = await ky.get(pendingTxUrl).json();
     if (pendingTxs.count > 0) {
       console.log(`[${safeAddress}] | ${pendingTxs.count} pending transactions`);
@@ -66,9 +73,9 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
           pendingTx.confirmations.sort((a,b) => { return a.owner.localeCompare(b.owner) });
           // console.log(`after sort: ${pendingTx.confirmations.map(_ => _.owner)}`);
           for (const confirmation of pendingTx.confirmations) {
-            console.log(`adding signature ${confirmation.signature} to ${concatSignatures}`);
+            // console.log(`adding signature ${confirmation.signature} to ${concatSignatures}`);
             concatSignatures += confirmation.signature.substring(2);
-            console.log(`new concat: ${concatSignatures}`);
+            // console.log(`new concat: ${concatSignatures}`);
           }
 
           const encoded = safeContract.interface.encodeFunctionData('execTransaction', [
