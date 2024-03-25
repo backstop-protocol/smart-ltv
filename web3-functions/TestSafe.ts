@@ -10,6 +10,7 @@ async function test() {
     txServiceUrl
   });
 
+  const safeAddress = "0xF89e9cf758EEd6ae41822DEe15945583C121d10e";
   const RPC_URL = 'https://mainnet.infura.io/v3/eb9a2c404eef43b891e4066a148f71dd';
   const provider = new ethers.JsonRpcProvider(RPC_URL);
 
