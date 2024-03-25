@@ -9,7 +9,7 @@
   "scripts": {
     "debug:gelato-target-allocator": "npx hardhat w3f-run target-allocator --logs --network ethereum",
     "publish:gelato-target-allocator": "npx hardhat w3f-deploy target-allocator",
-    "debug:multisig-executor": "npx hardhat w3f-run multisig-executor --logs --network ethereum",
+    "debug:multisig-executor": "npx hardhat w3f-run multisig-executor --logs --network polygon",
     "publish:multisig-executor": "npx hardhat w3f-deploy target-allocator",
     "test-unit": "forge test --match-path ./test/unit/**.sol",
     "test-integration": "forge test --match-path './test/integration/**' --fork-url $GOERLI_RPC_URL -vvv",
@@ -46,7 +46,6 @@
     "eslint-plugin-prettier": "4.2.1",
     "ethereum-waffle": "4.0.10",
     "ethers": "5.7.2",
-    "ethers6": "npm:ethers@^6",
     "hardhat": "^2.13.0",
     "hardhat-deploy": "^0.11.31",
     "lint-staged": "13.1.2",
@@ -63,8 +62,6 @@
   "dependencies": {
     "@gelatonetwork/automate-sdk": "^3.0.2",
     "@gelatonetwork/web3-functions-sdk": "2.3.0",
-    "@safe-global/protocol-kit": "^3.0.1",
-    "@safe-global/safe-core-sdk-types": "^4.0.1",
     "ky": "^0.33.2"
   }
 }
