@@ -61,6 +61,10 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
           const safeContract = new Contract(safeAddress, GNOSIS_SAFE_ABI, provider);
 
           let concatSignatures = '0x';
+          // order confirmation by owners
+          // console.log(`before sort: ${pendingTx.confirmations.map(_ => _.owner)}`);
+          pendingTx.confirmations.sort((a,b) => { return a.owner.localeCompare(b.owner) });
+          // console.log(`after sort: ${pendingTx.confirmations.map(_ => _.owner)}`);
           for (const confirmation of pendingTx.confirmations) {
             console.log(`adding signature ${confirmation.signature} to ${concatSignatures}`);
             concatSignatures += confirmation.signature.substring(2);
@@ -70,7 +74,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
           const encoded = safeContract.interface.encodeFunctionData('execTransaction', [
             pendingTx.to, // to
             pendingTx.value, // value
-            pendingTx.data == null || undefined ? '0x' : pendingTx.data, // data, might be null
+            pendingTx.data == null || undefined ? '0x' : pendingTx.data, // data, might be null when transfering eth
             pendingTx.operation, // operation
             pendingTx.safeTxGas, // safeTxGas
             pendingTx.baseGas, // baseGas
