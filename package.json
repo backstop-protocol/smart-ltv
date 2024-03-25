@@ -10,7 +10,7 @@
     "debug:gelato-target-allocator": "npx hardhat w3f-run target-allocator --logs --network ethereum",
     "publish:gelato-target-allocator": "npx hardhat w3f-deploy target-allocator",
     "debug:multisig-executor": "npx hardhat w3f-run multisig-executor --logs --network polygon",
-    "publish:multisig-executor": "npx hardhat w3f-deploy target-allocator",
+    "publish:multisig-executor": "npx hardhat w3f-deploy multisig-executor",
     "test-unit": "forge test --match-path ./test/unit/**.sol",
     "test-integration": "forge test --match-path './test/integration/**' --fork-url $GOERLI_RPC_URL -vvv",
     "coverage": "forge coverage --match-path './test/unit/**' --report summary --report lcov",
