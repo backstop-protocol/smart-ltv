@@ -38,7 +38,6 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   const provider = multiChainProvider.default();
 
-  console.log(provider.connection.url);
   const targetAllocatorAddress = userArgs.targetAllocatorAddress as string;
   if (!targetAllocatorAddress) {
     throw new Error("userArgs.targetAllocatorAddress not found");
