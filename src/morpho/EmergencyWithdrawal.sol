@@ -39,7 +39,8 @@ contract EmergencyWithdrawal {
     withdrawMaxToIdle(USDC_VAULT);
   }
 
-  /// @notice internal function allowing to withdraw the maximum possible assets from a specified vault to an idle market.
+  /// @notice Allows to withdraw the maximum possible assets from a specified vault to an idle market.
+  /// It can be called for any vault address, the 'withdrawETH' and 'withdrawUSDC' are 'no parameters' replacements
   /// @param vaultAddress The MetaMorpho vault address from which assets are to be withdrawn.
   /// Requires that the caller is an allocator for the specified vault.
   /// Reallocates funds from various markets to the idle market.
