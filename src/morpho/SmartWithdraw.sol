@@ -24,11 +24,15 @@ contract SmartWithdrawal {
   using MorphoLib for IMorpho;
   using UtilsLib for uint256;
 
-  SmartLTV public immutable smartLTV = 0x000000;
+  SmartLTV public immutable SMART_LTV;
+
+  constructor(address smartLTV) {
+    SMART_LTV = SmartLTV(smartLTV);
+  }
 
   function SmartWithdraw(
     address vaultAddress,
-    uint256 clf,
+    uint256 maxRiskLevel,
     uint256 marketIndex,
     RiskData memory riskData,
     uint8 v,
@@ -39,13 +43,13 @@ contract SmartWithdrawal {
     // can only work if the msg.sender is an allocator of the vault
     require(vault.isAllocator(msg.sender), "SmartWithdraw: msg.sender is not vault allocator");
     IMorpho morpho = vault.MORPHO();
-    uint256 nbMarkets = vault.withdrawQueueLength();
     Id marketId = vault.withdrawQueue(marketIndex);
     MarketParams memory marketParams = morpho.idToMarketParams(marketId);
     MarketConfig memory marketConfig = vault.config(marketId);
 
+    uint256 clf = (1e18 * 1e18) / maxRiskLevel;
     uint256 beta = _getLiquidationIncentives(marketParams.lltv);
-    uint256 recommendedLTV = smartLTV.ltv(
+    uint256 recommendedLTV = SMART_LTV.ltv(
       marketParams.collateralToken,
       marketParams.loanToken,
       marketConfig.cap,
@@ -65,7 +69,7 @@ contract SmartWithdrawal {
 
   /// @notice Calculates the liquidation incentives based on market LTV.
   /// @param marketParamsLLTV The LTV parameter of the market.
-  /// @return liquidationIncentives calculated liquidation incentives. 3% = 0.03e18
+  /// @return liquidationIncentives calculated liquidation incentives. example: 3% = 0.03e18
   function _getLiquidationIncentives(uint256 marketParamsLLTV) private pure returns (uint256 liquidationIncentives) {
     // The liquidation incentive factor is min(maxLiquidationIncentiveFactor, 1/(1 - cursor*(1 - lltv))).
     uint256 computedLiquidationIncentives = WAD.wDivDown(WAD - LIQUIDATION_CURSOR.wMulDown(WAD - marketParamsLLTV));
