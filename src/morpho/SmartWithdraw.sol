@@ -36,7 +36,7 @@ contract SmartWithdraw {
   /// @param maxAcceptableRiskLevel The maximum acceptable risk level for the the market.
   /// @param marketIndex The index of the market in the vault's withdrawal queue.
   /// @param signedRiskData The risk data used to calculate the recommended LTV and the signature.
-  /// @return bool Returns true if the recommended LTV is below the market's liquidation LTV, false otherwise. If true, all available liquidity should be withdrawn
+  /// @return bool Returns true if the recommended LTV is below the market's liquidation LTV, false otherwise. If true, all available liquidity should be withdrawn. Also returns the recommended LTV
   function keeperCheck(
     address vaultAddress,
     uint256 maxAcceptableRiskLevel,
@@ -73,6 +73,10 @@ contract SmartWithdraw {
     return (marketParams, marketConfig.cap);
   }
 
+  /// @notice Initiates the withdrawal of all available liquidity from a specified market in the vault.
+  /// @dev This function can only be called by one of the vault's allocators.
+  /// @param vaultAddress The address of the vault from which liquidity is to be withdrawn.
+  /// @param marketIndex The index of the market in the vault's withdrawal queue.
   function keeperCall(address vaultAddress, uint256 marketIndex) public {
     IMetaMorpho vault = IMetaMorpho(vaultAddress);
     // can only work if the msg.sender is an allocator of the vault
