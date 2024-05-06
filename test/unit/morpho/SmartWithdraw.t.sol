@@ -126,7 +126,6 @@ contract SmartWithdrawTest is Test {
     vm.roll(16848497);
   }
 
-  /// @notice Tests the correct initialization of the BProtocolMorphoAllocator contract and its dependencies
   function testInitialization() public {
     assertEq(address(smartWithdraw.SMART_LTV()), address(smartLTV));
     assertEq(Id.unwrap(mockMetaMorpho.withdrawQueue(0)), Id.unwrap(MarketParamsLib.id(market1)));
@@ -136,7 +135,6 @@ contract SmartWithdrawTest is Test {
 
   function testCheckWithdrawRiskyMarket() public {
     // these risk parameters should make the smartLTV returns 0% LTV
-    // so it should revert
     uint256 liquidity = 0.1e18; // low liquidity
     uint256 volatility = 100_000e18; // big volatility
 
@@ -164,12 +162,15 @@ contract SmartWithdrawTest is Test {
     console.log("recommanded ltv %s", TestUtils.toPercentageString(recommendedLTV));
   }
 
+  /// @notice Tests the withdrawal check for a market with high liquidity and low volatility.
+  /// @dev This test simulates a scenario where the market conditions are healthy (high liquidity, low volatility),
+  ///      and verifies that the SmartWithdraw contract recommends not to withdraw.
   function testCheckWithdrawHealthyMarket() public {
-    // these risk parameters should make the smartLTV returns 0% LTV
-    // so it should revert
+    // Set high liquidity and low volatility to simulate a healthy market condition
     uint256 liquidity = 1_000_000_000e18; // high liquidity
     uint256 volatility = 0.01e18; // low volatility
 
+    // Sign the risk data with the given parameters
     (RiskData memory data, uint8 v, bytes32 r, bytes32 s) = TestUtils.signDataValid(
       trustedRelayerPrivateKey,
       market1.collateralToken,
@@ -180,17 +181,22 @@ contract SmartWithdrawTest is Test {
       volatility
     );
 
+    // Index of the market to check
     uint256 marketIndex = 0;
 
+    // Create a signed risk data structure
     SignedRiskData memory signedRiskData = SignedRiskData({riskData: data, v: v, r: r, s: s});
 
+    // Perform the keeper check to determine if withdrawal is recommended
     (bool shouldWithdraw, uint256 recommendedLTV) = smartWithdraw.keeperCheck(
       address(mockMetaMorpho),
       20e18,
       marketIndex,
       signedRiskData
     );
+
+    // Assert that withdrawal should not occur in a healthy market
     assertFalse(shouldWithdraw);
-    console.log("recommanded ltv %s", TestUtils.toPercentageString(recommendedLTV));
+    console.log("recommended ltv %s", TestUtils.toPercentageString(recommendedLTV));
   }
 }
