@@ -7,6 +7,7 @@ import "../../lib/forge-std/src/Test.sol";
 contract MockMetaMorpho is IMetaMorpho {
   IMorpho public MORPHO;
   mapping(Id => MarketConfig) public configs;
+  Id[] public marketIds;
 
   constructor(IMorpho _morpho) {
     MORPHO = _morpho;
@@ -20,12 +21,24 @@ contract MockMetaMorpho is IMetaMorpho {
     return address(1);
   }
 
+  function setMarkets(Id[] memory _marketIds) external {
+    marketIds = _marketIds;
+  }
+
   function setConfig(Id id, MarketConfig memory marketConfig) external {
     configs[id] = marketConfig;
   }
 
   function config(Id id) external view override returns (MarketConfig memory) {
     return configs[id];
+  }
+
+  function withdrawQueue(uint256 _index) external view override returns (Id) {
+    return marketIds[_index];
+  }
+
+  function withdrawQueueLength() external view override returns (uint256) {
+    return marketIds.length;
   }
 
   function curator() external pure override returns (address) {
@@ -57,14 +70,6 @@ contract MockMetaMorpho is IMetaMorpho {
   }
 
   function supplyQueueLength() external pure override returns (uint256) {
-    return uint256(0); // Placeholder value
-  }
-
-  function withdrawQueue(uint256) external pure override returns (Id) {
-    return Id.wrap(bytes32(0)); // Placeholder value
-  }
-
-  function withdrawQueueLength() external pure override returns (uint256) {
     return uint256(0); // Placeholder value
   }
 

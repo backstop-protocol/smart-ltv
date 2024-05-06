@@ -15,3 +15,10 @@ struct RiskData {
   uint256 lastUpdate;
   uint256 chainId;
 }
+
+struct SignedRiskData {
+  RiskData riskData;
+  uint8 v;
+  bytes32 r;
+  bytes32 s;
+}

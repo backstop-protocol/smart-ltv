@@ -9,14 +9,14 @@ import {MathLib, WAD} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/M
 import {MorphoBalancesLib} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/periphery/MorphoBalancesLib.sol";
 import {MorphoLib} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/periphery/MorphoLib.sol";
 import {UtilsLib} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/UtilsLib.sol";
-import {RiskData} from "../interfaces/RiskData.sol";
+import {RiskData, SignedRiskData} from "../interfaces/RiskData.sol";
 import {SmartLTV} from "../core/SmartLTV.sol";
 import "../../lib/metamorpho/lib/morpho-blue/src/libraries/ConstantsLib.sol";
 
-/// @title Smart withdrawal using the SmartLTV suite
-/// @notice This contract checks the risk level of a morpho market using the SmartLTV contract and withdraw if the risk if risk > 20
-/// @dev this contract must have the allocator role on the vaults
-contract SmartWithdrawal {
+/// @title Smart Withdrawal Management
+/// @notice Manages withdrawals based on risk assessments provided by the SmartLTV contract. Withdrawals are triggered when the risk level exceeds specific threshold.
+/// @dev Requires allocator privileges on the associated vaults to perform withdrawals.
+contract SmartWithdraw {
   using MorphoBalancesLib for IMorpho;
   using MarketParamsLib for MarketParams;
   using SharesMathLib for uint256;
@@ -30,41 +30,59 @@ contract SmartWithdrawal {
     SMART_LTV = SmartLTV(smartLTV);
   }
 
-  function SmartWithdraw(
+  /// @notice Checks if the recommended Loan-to-Value (LTV) is below the market's liquidation LTV threshold.
+  /// @dev This function is used by keepers to verify the risk parameters of a specific market
+  /// @param vaultAddress The address of the vault where the market is located.
+  /// @param maxAcceptableRiskLevel The maximum acceptable risk level for the the market.
+  /// @param marketIndex The index of the market in the vault's withdrawal queue.
+  /// @param signedRiskData The risk data used to calculate the recommended LTV and the signature.
+  /// @return bool Returns true if the recommended LTV is below the market's liquidation LTV, false otherwise. If true, all available liquidity should be withdrawn
+  function keeperCheck(
     address vaultAddress,
-    uint256 maxRiskLevel,
+    uint256 maxAcceptableRiskLevel,
     uint256 marketIndex,
-    RiskData memory riskData,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) public {
-    IMetaMorpho vault = IMetaMorpho(vaultAddress);
-    // can only work if the msg.sender is an allocator of the vault
-    require(vault.isAllocator(msg.sender), "SmartWithdraw: msg.sender is not vault allocator");
-    IMorpho morpho = vault.MORPHO();
-    Id marketId = vault.withdrawQueue(marketIndex);
-    MarketParams memory marketParams = morpho.idToMarketParams(marketId);
-    MarketConfig memory marketConfig = vault.config(marketId);
+    SignedRiskData memory signedRiskData
+  ) public view returns (bool, uint256) {
+    (MarketParams memory marketParams, uint256 cap) = _getRequiredParameters(vaultAddress, marketIndex);
 
-    uint256 clf = (1e18 * 1e18) / maxRiskLevel;
-    uint256 beta = _getLiquidationIncentives(marketParams.lltv);
     uint256 recommendedLTV = SMART_LTV.ltv(
       marketParams.collateralToken,
       marketParams.loanToken,
-      marketConfig.cap,
-      beta,
-      clf,
-      riskData,
-      v,
-      r,
-      s
+      cap,
+      _getLiquidationIncentives(marketParams.lltv),
+      (1e18 * 1e18) / maxAcceptableRiskLevel,
+      signedRiskData.riskData,
+      signedRiskData.v,
+      signedRiskData.r,
+      signedRiskData.s
     );
 
-    if (recommendedLTV < marketParams.lltv) {
-      // perform withdraw from the market
-      _withdrawAllFromMarket(vault, morpho, marketParams);
-    }
+    // if the recommended LTV is below the market's liquidation LTV, all available liquidity should be withdrawn
+    return (recommendedLTV < marketParams.lltv, recommendedLTV);
+  }
+
+  function _getRequiredParameters(
+    address vaultAddress,
+    uint256 marketIndex
+  ) internal view returns (MarketParams memory marketParams, uint256 cap) {
+    IMetaMorpho vault = IMetaMorpho(vaultAddress);
+    IMorpho morpho = vault.MORPHO();
+    Id marketId = vault.withdrawQueue(marketIndex);
+    marketParams = morpho.idToMarketParams(marketId);
+    MarketConfig memory marketConfig = vault.config(marketId);
+    return (marketParams, marketConfig.cap);
+  }
+
+  function keeperCall(address vaultAddress, uint256 marketIndex) public {
+    IMetaMorpho vault = IMetaMorpho(vaultAddress);
+    // can only work if the msg.sender is an allocator of the vault
+    require(vault.isAllocator(msg.sender), "SmartWithdraw: msg.sender is not vault allocator");
+
+    IMorpho morpho = vault.MORPHO();
+    Id marketId = vault.withdrawQueue(marketIndex);
+    MarketParams memory marketParams = morpho.idToMarketParams(marketId);
+
+    _withdrawAllFromMarket(vault, morpho, marketParams);
   }
 
   /// @notice Calculates the liquidation incentives based on market LTV.
@@ -84,6 +102,10 @@ contract SmartWithdrawal {
     liquidationIncentives -= WAD;
   }
 
+  /// @notice Withdraws all available liquidity from a specified market and reallocates it the idle market.
+  /// @param vault The vault contract from which assets are withdrawn.
+  /// @param morpho The Morpho contract used to interact with the market.
+  /// @param marketToWithdraw The market parameters from which all available liquidity is to be withdrawn.
   function _withdrawAllFromMarket(IMetaMorpho vault, IMorpho morpho, MarketParams memory marketToWithdraw) internal {
     MarketParams memory idleMarket = _getIdleMarket(vault);
     MarketAllocation[] memory allocations = new MarketAllocation[](2);
@@ -108,6 +130,9 @@ contract SmartWithdrawal {
     vault.reallocate(allocations);
   }
 
+  /// @notice Finds the idle market in the vault.
+  /// @param vault The vault contract from which the idle market is to be found.
+  /// @return idleMarketParams The parameters of the idle market.
   function _getIdleMarket(IMetaMorpho vault) internal view returns (MarketParams memory idleMarketParams) {
     IMorpho morpho = vault.MORPHO();
     uint256 nbMarkets = vault.withdrawQueueLength();
