@@ -96,7 +96,11 @@ function validateParameters(parameters: SmartWithdrawParameters) {
         parameters.enabled = false;
     }
 
-    if (parameters.smartWithdrawContract == ethers.constants.AddressZero) {
-        throw new Error(`Cannot read param smartWithdrawContract: ${parameters.smartWithdrawContract}`);
+    if (!parameters.smartWithdrawContract || parameters.smartWithdrawContract == ethers.constants.AddressZero) {
+        throw new Error(`smartWithdrawContract param must not be address zero or empty`);
+    }
+
+    if (!parameters.vaultAddress || parameters.vaultAddress == ethers.constants.AddressZero) {
+        throw new Error(`vaultAddress param must not be address zero or empty`);
     }
 }
