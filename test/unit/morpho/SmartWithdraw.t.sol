@@ -126,6 +126,8 @@ contract SmartWithdrawTest is Test {
     vm.roll(16848497);
   }
 
+  /// @notice Tests the initialization of the SmartWithdraw contract and the setup of the MetaMorpho mock.
+  /// @dev Asserts the correct initialization of the SmartLTV address in SmartWithdraw and the correct ordering of markets in the MetaMorpho mock's withdraw queue.
   function testInitialization() public {
     assertEq(address(smartWithdraw.SMART_LTV()), address(smartLTV));
     assertEq(Id.unwrap(mockMetaMorpho.withdrawQueue(0)), Id.unwrap(MarketParamsLib.id(market1)));
@@ -133,6 +135,8 @@ contract SmartWithdrawTest is Test {
     assertEq(Id.unwrap(mockMetaMorpho.withdrawQueue(2)), Id.unwrap(MarketParamsLib.id(marketIdle)));
   }
 
+  /// @notice Tests the withdrawal recommendation for a market with high risk parameters.
+  /// @dev This test simulates a scenario with low liquidity and high volatility to check if the SmartWithdraw contract recommends withdrawal.
   function testCheckWithdrawRiskyMarket() public {
     // these risk parameters should make the smartLTV returns 0% LTV
     uint256 liquidity = 0.1e18; // low liquidity
@@ -159,7 +163,7 @@ contract SmartWithdrawTest is Test {
       signedRiskData
     );
     assertTrue(shouldWithdraw);
-    console.log("recommanded ltv %s", TestUtils.toPercentageString(recommendedLTV));
+    console.log("recommended ltv %s", TestUtils.toPercentageString(recommendedLTV));
   }
 
   /// @notice Tests the withdrawal check for a market with high liquidity and low volatility.
