@@ -55,5 +55,4 @@ contract IntegrationTestSmartWithdraw is Test {
     assertFalse(shouldWithdraw);
     console.log("recommended ltv %s", TestUtils.toPercentageString(recommendedLTV));
   }
-
 }

@@ -62,6 +62,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
             console.warn(`Cannot find risk data for ${market.base}/${market.quote} and liquidation bonus ${market.liquidationBonus}`);
             continue;
         }
+        console.log(`${market.index} ${market.base} ${market.quote}:`, selectedData);
 
         const signedRiskData: SignedRiskData = {
             riskData: selectedData.riskData,
@@ -72,6 +73,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
         const keeperCheckResponse = await contract.keeperCheck(parameters.vaultAddress, market.maxAcceptableRiskLevel, market.index, signedRiskData);
 
+        console.log(`${market.index} ${market.base} ${market.quote}:`, keeperCheckResponse);
         if (keeperCheckResponse[0]) {
             canExec = true;
             callData.push({
