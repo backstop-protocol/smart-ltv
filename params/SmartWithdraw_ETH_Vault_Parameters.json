@@ -1,0 +1,15 @@
+{
+    "maxGasPriceWei": "65000000000",
+    "enabled": true,
+    "smartWithdrawContract": "0x0000000000000000000000000000000000000000",
+    "vaultAddress": "0x0000000000000000000000000000000000000000",
+    "markets": [
+        {
+            "index": 1,
+            "maxAcceptableRiskLevel": 20,
+            "base": "WETH",
+            "quote": "wstETH",
+            "liquidationBonus": 150
+        }
+    ]
+}
