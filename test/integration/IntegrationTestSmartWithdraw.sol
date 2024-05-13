@@ -48,7 +48,6 @@ contract IntegrationTestSmartWithdraw is Test {
 
     (bool shouldWithdraw, uint256 recommendedLTV) = smartWithdraw.keeperCheck(
       ETH_VAULT,
-      20e18,
       wstETH_945_MarketIndex,
       signedRiskData
     );

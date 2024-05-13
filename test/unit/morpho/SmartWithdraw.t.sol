@@ -158,7 +158,6 @@ contract SmartWithdrawTest is Test {
 
     (bool shouldWithdraw, uint256 recommendedLTV) = smartWithdraw.keeperCheck(
       address(mockMetaMorpho),
-      20e18,
       market2Index,
       signedRiskData
     );
@@ -194,7 +193,6 @@ contract SmartWithdrawTest is Test {
     // Perform the keeper check to determine if withdrawal is recommended
     (bool shouldWithdraw, uint256 recommendedLTV) = smartWithdraw.keeperCheck(
       address(mockMetaMorpho),
-      20e18,
       marketIndex,
       signedRiskData
     );
