@@ -26,20 +26,28 @@ contract SmartWithdraw {
 
   SmartLTV public immutable SMART_LTV;
 
+  mapping(address => uint256) public VaultMaxRiskLevel;
+
   constructor(address smartLTV) {
     SMART_LTV = SmartLTV(smartLTV);
+  }
+
+  /// @notice Sets the maximum acceptable risk level for a specific vault.
+  /// @param vaultAddress The address of the vault for which to set the risk level.
+  /// @param newMaxRiskLevel The new maximum risk level to be set.
+  function setVaultMaxRiskLevel(address vaultAddress, uint256 newMaxRiskLevel) public {
+    require(IMetaMorpho(vaultAddress).isAllocator(msg.sender), "SmartWithdraw: msg.sender is not vault allocator");
+    VaultMaxRiskLevel[vaultAddress] = newMaxRiskLevel;
   }
 
   /// @notice Checks if the recommended Loan-to-Value (LTV) is below the market's liquidation LTV threshold.
   /// @dev This function is used by keepers to verify the risk parameters of a specific market
   /// @param vaultAddress The address of the vault where the market is located.
-  /// @param maxAcceptableRiskLevel The maximum acceptable risk level for the the market. For 20 should be set to 20e18
   /// @param marketIndex The index of the market in the vault's withdrawal queue.
   /// @param signedRiskData The risk data used to calculate the recommended LTV and the signature.
   /// @return bool Returns true if the recommended LTV is below the market's liquidation LTV, false otherwise. If true, all available liquidity should be withdrawn. Also returns the recommended LTV
   function keeperCheck(
     address vaultAddress,
-    uint256 maxAcceptableRiskLevel,
     uint256 marketIndex,
     SignedRiskData memory signedRiskData
   ) public view returns (bool, uint256) {
@@ -50,7 +58,7 @@ contract SmartWithdraw {
       marketParams.loanToken,
       cap,
       _getLiquidationIncentives(marketParams.lltv),
-      (1e18 * 1e18) / maxAcceptableRiskLevel,
+      (1e18 * 1e18) / VaultMaxRiskLevel[vaultAddress],
       signedRiskData.riskData,
       signedRiskData.v,
       signedRiskData.r,
@@ -76,12 +84,18 @@ contract SmartWithdraw {
   /// @notice Initiates the withdrawal of all available liquidity from a specified market in the vault.
   /// @dev This function can only be called by one of the vault's allocators.
   /// @dev This contract needs to be an allocator of the vault it targets.
-  /// @param vaultAddress The address of the vault from which liquidity is to be withdrawn.
+  /// @param vaultAddress The address of the vault where the market is located.
   /// @param marketIndex The index of the market in the vault's withdrawal queue.
-  function keeperCall(address vaultAddress, uint256 marketIndex) public {
+  /// @param signedRiskData The risk data used to calculate the recommended LTV and the signature.
+  function keeperCall(address vaultAddress, uint256 marketIndex, SignedRiskData memory signedRiskData) public {
     IMetaMorpho vault = IMetaMorpho(vaultAddress);
     // can only work if the msg.sender is an allocator of the vault
     require(vault.isAllocator(msg.sender), "SmartWithdraw: msg.sender is not vault allocator");
+
+    (bool shouldWithdraw, ) = keeperCheck(vaultAddress, marketIndex, signedRiskData);
+    if (!shouldWithdraw) {
+      return;
+    }
 
     IMorpho morpho = vault.MORPHO();
     Id marketId = vault.withdrawQueue(marketIndex);
