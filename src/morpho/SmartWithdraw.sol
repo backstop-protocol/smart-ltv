@@ -33,7 +33,7 @@ contract SmartWithdraw {
   /// @notice Checks if the recommended Loan-to-Value (LTV) is below the market's liquidation LTV threshold.
   /// @dev This function is used by keepers to verify the risk parameters of a specific market
   /// @param vaultAddress The address of the vault where the market is located.
-  /// @param maxAcceptableRiskLevel The maximum acceptable risk level for the the market.
+  /// @param maxAcceptableRiskLevel The maximum acceptable risk level for the the market. For 20 should be set to 20e18
   /// @param marketIndex The index of the market in the vault's withdrawal queue.
   /// @param signedRiskData The risk data used to calculate the recommended LTV and the signature.
   /// @return bool Returns true if the recommended LTV is below the market's liquidation LTV, false otherwise. If true, all available liquidity should be withdrawn. Also returns the recommended LTV
@@ -75,6 +75,7 @@ contract SmartWithdraw {
 
   /// @notice Initiates the withdrawal of all available liquidity from a specified market in the vault.
   /// @dev This function can only be called by one of the vault's allocators.
+  /// @dev This contract needs to be an allocator of the vault it targets.
   /// @param vaultAddress The address of the vault from which liquidity is to be withdrawn.
   /// @param marketIndex The index of the market in the vault's withdrawal queue.
   function keeperCall(address vaultAddress, uint256 marketIndex) public {
