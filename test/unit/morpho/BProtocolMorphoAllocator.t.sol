@@ -127,6 +127,7 @@ contract BProtocolMorphoAllocatorTest is Test {
       debtAsset: address(2), // Example address
       liquidity: 1000, // Example value
       volatility: 500, // Example value
+      liquidationBonus: 0.005e18, // 0.5% liquidation bonus
       lastUpdate: block.timestamp, // Current block timestamp
       chainId: block.chainid // Current chain ID
     });
@@ -159,6 +160,7 @@ contract BProtocolMorphoAllocatorTest is Test {
       debtAsset: address(2), // Example address
       liquidity: 1000, // Example value
       volatility: 500, // Example value
+      liquidationBonus: 0.005e18, // 0.5% liquidation bonus
       lastUpdate: block.timestamp, // Current block timestamp
       chainId: block.chainid // Current chain ID
     });
@@ -204,6 +206,7 @@ contract BProtocolMorphoAllocatorTest is Test {
       debtAsset: address(2), // Example address
       liquidity: 1000, // Example value
       volatility: 500, // Example value
+      liquidationBonus: 0.005e18, // 0.5% liquidation bonus
       lastUpdate: block.timestamp, // Current block timestamp
       chainId: block.chainid // Current chain ID
     });
@@ -239,6 +242,7 @@ contract BProtocolMorphoAllocatorTest is Test {
       debtAsset: address(2), // Example address
       liquidity: 1000, // Example value
       volatility: 500, // Example value
+      liquidationBonus: 0.005e18, // 0.5% liquidation bonus
       lastUpdate: block.timestamp, // Current block timestamp
       chainId: block.chainid // Current chain ID
     });
@@ -278,7 +282,8 @@ contract BProtocolMorphoAllocatorTest is Test {
       pythia.RISKDATA_TYPEHASH(),
       pythia.DOMAIN_SEPARATOR(),
       liquidity,
-      volatility
+      volatility,
+      0.005e18 // 0.5% liquidation bonus
     );
 
     RiskData[] memory riskDatas = new RiskData[](1);
@@ -315,7 +320,8 @@ contract BProtocolMorphoAllocatorTest is Test {
       pythia.RISKDATA_TYPEHASH(),
       pythia.DOMAIN_SEPARATOR(),
       liquidity,
-      volatility
+      volatility,
+      0.005e18 // 0.5% liquidation bonus
     );
 
     RiskData[] memory riskDatas = new RiskData[](1);
@@ -354,6 +360,7 @@ contract BProtocolMorphoAllocatorTest is Test {
       debtAsset: address(2), // Example address
       liquidity: 1000, // Example value
       volatility: 500, // Example value
+      liquidationBonus: 0.005e18, // 0.5% liquidation bonus
       lastUpdate: block.timestamp, // Current block timestamp
       chainId: block.chainid // Current chain ID
     });
@@ -370,7 +377,8 @@ contract BProtocolMorphoAllocatorTest is Test {
       pythia.RISKDATA_TYPEHASH(),
       pythia.DOMAIN_SEPARATOR(),
       liquidity,
-      volatility
+      volatility,
+      0.005e18 // 0.5% liquidation bonus
     );
 
     riskDatas[1] = data;
@@ -414,6 +422,7 @@ contract BProtocolMorphoAllocatorTest is Test {
       debtAsset: address(2), // Example address
       liquidity: 1000, // Example value
       volatility: 500, // Example value
+      liquidationBonus: 0.005e18, // 0.5% liquidation bonus
       lastUpdate: block.timestamp, // Current block timestamp
       chainId: block.chainid // Current chain ID
     });
@@ -429,7 +438,8 @@ contract BProtocolMorphoAllocatorTest is Test {
       pythia.RISKDATA_TYPEHASH(),
       pythia.DOMAIN_SEPARATOR(),
       liquidity,
-      volatility
+      volatility,
+      0.005e18 // 0.5% liquidation bonus
     );
 
     riskDatas[1] = data;

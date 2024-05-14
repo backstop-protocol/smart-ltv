@@ -12,6 +12,7 @@ struct RiskData {
   address debtAsset;
   uint256 liquidity;
   uint256 volatility;
+  uint256 liquidationBonus;
   uint256 lastUpdate;
   uint256 chainId;
 }

@@ -78,7 +78,8 @@ contract ReallocatesDAiToUSDT is Script {
       pythia.RISKDATA_TYPEHASH(),
       pythia.DOMAIN_SEPARATOR(),
       liquidity,
-      volatility
+      volatility,
+      0.005e18 // 0.5% liquidation bonus
     );
 
     riskDatas[index] = data;

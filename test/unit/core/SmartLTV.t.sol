@@ -82,6 +82,7 @@ contract SmartLTVTest is Test {
     address debtAsset,
     uint256 liquidity,
     uint256 volatility,
+    uint256 liquidationBonus,
     uint256 lastUpdate,
     uint256 chainId
   ) public {
@@ -90,6 +91,7 @@ contract SmartLTVTest is Test {
       debtAsset: debtAsset,
       liquidity: liquidity,
       volatility: volatility,
+      liquidationBonus: liquidationBonus,
       lastUpdate: lastUpdate,
       chainId: chainId
     });
@@ -102,6 +104,7 @@ contract SmartLTVTest is Test {
         data.debtAsset,
         data.liquidity,
         data.volatility,
+        data.liquidationBonus,
         data.lastUpdate,
         data.chainId
       )
@@ -140,6 +143,7 @@ contract SmartLTVTest is Test {
     address debtAsset,
     uint256 liquidity,
     uint256 volatility,
+    uint256 liquidationBonus,
     uint256 chainId
   ) public {
     RiskData memory data = RiskData({
@@ -147,6 +151,7 @@ contract SmartLTVTest is Test {
       debtAsset: debtAsset,
       liquidity: liquidity,
       volatility: volatility,
+      liquidationBonus: liquidationBonus,
       lastUpdate: block.timestamp - 10 days, // last update 10 days old
       chainId: chainId
     });
@@ -159,6 +164,7 @@ contract SmartLTVTest is Test {
         data.debtAsset,
         data.liquidity,
         data.volatility,
+        data.liquidationBonus,
         data.lastUpdate,
         data.chainId
       )
@@ -202,6 +208,7 @@ contract SmartLTVTest is Test {
       debtAsset: debtAsset,
       liquidity: liquidity,
       volatility: volatility,
+      liquidationBonus: 0.005e18, // 0.5% liquidation bonus
       lastUpdate: block.timestamp - 3600, // 1 hour old data
       chainId: bound(chainIdSeed, block.chainid + 1, 1e20) // different chainid than the current one
     });
@@ -214,6 +221,7 @@ contract SmartLTVTest is Test {
         data.debtAsset,
         data.liquidity,
         data.volatility,
+        data.liquidationBonus,
         data.lastUpdate,
         data.chainId
       )
@@ -249,6 +257,7 @@ contract SmartLTVTest is Test {
       debtAsset: debtAsset,
       liquidity: liquidity,
       volatility: volatility,
+      liquidationBonus: 0.005e18, // 0.5% liquidation bonus
       lastUpdate: block.timestamp - 3600, // 1 hour old data
       chainId: block.chainid
     });
@@ -261,6 +270,7 @@ contract SmartLTVTest is Test {
         data.debtAsset,
         data.liquidity,
         data.volatility,
+        data.liquidationBonus,
         data.lastUpdate,
         data.chainId
       )
@@ -296,6 +306,7 @@ contract SmartLTVTest is Test {
       debtAsset: address(25),
       liquidity: liquidity,
       volatility: volatility,
+      liquidationBonus: 0.005e18, // 0.5% liquidation bonus
       lastUpdate: block.timestamp - 3600, // 1 hour old data
       chainId: block.chainid
     });
@@ -308,6 +319,7 @@ contract SmartLTVTest is Test {
         data.debtAsset,
         data.liquidity,
         data.volatility,
+        data.liquidationBonus,
         data.lastUpdate,
         data.chainId
       )
@@ -363,7 +375,8 @@ contract SmartLTVTest is Test {
       pythia.RISKDATA_TYPEHASH(),
       pythia.DOMAIN_SEPARATOR(),
       liquidity,
-      volatility
+      volatility,
+      liquidationBonus
     );
     // Call the ltv function
     uint256 ltv = smartLTV.ltv(
@@ -397,7 +410,8 @@ contract SmartLTVTest is Test {
       pythia.RISKDATA_TYPEHASH(),
       pythia.DOMAIN_SEPARATOR(),
       liquidity,
-      volatility
+      volatility,
+      liquidationBonus
     );
     // Call the ltv function
     uint256 ltv = smartLTV.ltv(
@@ -433,7 +447,8 @@ contract SmartLTVTest is Test {
       pythia.RISKDATA_TYPEHASH(),
       pythia.DOMAIN_SEPARATOR(),
       liquidity,
-      volatility
+      volatility,
+      liquidationBonus
     );
     // Call the ltv function
     uint256 ltv = smartLTV.ltv(

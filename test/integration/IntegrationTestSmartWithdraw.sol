@@ -41,7 +41,8 @@ contract IntegrationTestSmartWithdraw is Test {
       pythia.RISKDATA_TYPEHASH(),
       pythia.DOMAIN_SEPARATOR(),
       liquidity,
-      volatility
+      volatility,
+      0.005e18 // 0.5% liquidation bonus
     );
 
     SignedRiskData memory signedRiskData = SignedRiskData({riskData: data, v: v, r: r, s: s});

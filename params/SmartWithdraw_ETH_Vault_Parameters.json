@@ -6,9 +6,8 @@
     "markets": [
         {
             "index": 1,
-            "maxAcceptableRiskLevel": 20,
-            "base": "WETH",
-            "quote": "wstETH",
+            "base": "wstETH",
+            "quote": "WETH",
             "liquidationBonus": 150
         }
     ]

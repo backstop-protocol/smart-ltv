@@ -119,6 +119,7 @@ contract SmartWithdrawTest is Test {
     setupMorphoMock();
     setupMetaMorphoMock(IMorpho(mockMorpho));
     smartWithdraw = new SmartWithdraw(address(smartLTV));
+    smartWithdraw.setVaultMaxRiskLevel(address(mockMetaMorpho), 20e18);
 
     // warp to a known block and timestamp
     // this is needed because we sign data with a timestamp using block.timestamp - 3600
@@ -149,7 +150,8 @@ contract SmartWithdrawTest is Test {
       pythia.RISKDATA_TYPEHASH(),
       pythia.DOMAIN_SEPARATOR(),
       liquidity,
-      volatility
+      volatility,
+      0.005e18 // 0.5% liquidation bonus
     );
 
     uint256 market2Index = 1;
@@ -181,9 +183,9 @@ contract SmartWithdrawTest is Test {
       pythia.RISKDATA_TYPEHASH(),
       pythia.DOMAIN_SEPARATOR(),
       liquidity,
-      volatility
+      volatility,
+      0.005e18 // 0.5% liquidation bonus
     );
-
     // Index of the market to check
     uint256 marketIndex = 0;
 

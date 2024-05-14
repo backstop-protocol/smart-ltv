@@ -55,7 +55,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     for (const market of parameters.markets) {
         // get risk data from github
         // ex url: https://raw.githubusercontent.com/LaTribuWeb3/risk-data-repo/main/mainnet/latest/WETH_wstETH
-        const riskDataForMarket = `https://raw.githubusercontent.com/LaTribuWeb3/risk-data-repo/main/mainnet/latest/${market.base}_${market.quote}`;
+        const riskDataForMarket = `https://raw.githubusercontent.com/LaTribuWeb3/risk-data-repo/main/mainnet/latest/${market.base}_${market.quote}_in_quote`;
         const ghData: GithubRawData[] = await ky.get(riskDataForMarket).json();
         const selectedData = ghData.find(_ => _.liquidationBonus == market.liquidationBonus);
         if(!selectedData) {
@@ -71,14 +71,14 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
             s: selectedData.s,
         }
 
-        const keeperCheckResponse = await contract.keeperCheck(parameters.vaultAddress, market.maxAcceptableRiskLevel, market.index, signedRiskData);
+        const keeperCheckResponse = await contract.keeperCheck(parameters.vaultAddress, market.index, signedRiskData);
 
         console.log(`${market.index} ${market.base} ${market.quote}:`, keeperCheckResponse);
         if (keeperCheckResponse[0]) {
             canExec = true;
             callData.push({
                 to: parameters.smartWithdrawContract,
-                data: smartWithdrawInterface.encodeFunctionData("keeperCall", [parameters.vaultAddress, market.index]),
+                data: smartWithdrawInterface.encodeFunctionData("keeperCall", [parameters.vaultAddress, market.index, signedRiskData]),
             });
         }
     }

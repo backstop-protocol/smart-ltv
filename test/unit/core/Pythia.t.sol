@@ -57,6 +57,7 @@ contract PythiaTest is Test {
     address debtAsset,
     uint256 liquidity,
     uint256 volatility,
+    uint256 liquidationBonus,
     uint256 lastUpdate,
     uint256 chainId
   ) public {
@@ -65,6 +66,7 @@ contract PythiaTest is Test {
       debtAsset: debtAsset,
       liquidity: liquidity,
       volatility: volatility,
+      liquidationBonus: liquidationBonus,
       lastUpdate: lastUpdate,
       chainId: chainId
     });
@@ -76,6 +78,7 @@ contract PythiaTest is Test {
         data.debtAsset,
         data.liquidity,
         data.volatility,
+        data.liquidationBonus,
         data.lastUpdate,
         data.chainId
       )
@@ -98,6 +101,7 @@ contract PythiaTest is Test {
     address debtAsset,
     uint256 liquidity,
     uint256 volatility,
+    uint256 liquidationBonus,
     uint256 lastUpdate,
     uint256 chainId
   ) public {
@@ -109,6 +113,7 @@ contract PythiaTest is Test {
       debtAsset: debtAsset,
       liquidity: liquidity,
       volatility: volatility,
+      liquidationBonus: liquidationBonus,
       lastUpdate: lastUpdate,
       chainId: chainId
     });
@@ -121,6 +126,7 @@ contract PythiaTest is Test {
         data.debtAsset,
         data.liquidity,
         data.volatility,
+        data.liquidationBonus,
         data.lastUpdate,
         data.chainId
       )
