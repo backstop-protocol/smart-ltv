@@ -1,8 +1,8 @@
 {
     "maxGasPriceWei": "65000000000",
     "enabled": true,
-    "smartWithdrawContract": "0x0000000000000000000000000000000000000000",
-    "vaultAddress": "0x0000000000000000000000000000000000000000",
+    "smartWithdrawContract": "0xCf48A240FB83861e729C65A5234598A16d045d99",
+    "vaultAddress": "0x38989BBA00BDF8181F4082995b3DEAe96163aC5D",
     "markets": [
         {
             "index": 1,
