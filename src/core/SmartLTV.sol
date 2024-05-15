@@ -88,10 +88,9 @@ contract SmartLTV {
     }
 
     // check liquidation bonus
-    if(beta < riskData.liquidationBonus) {
+    if (beta < riskData.liquidationBonus) {
       revert ErrorLib.WRONG_LIQUIDATION_BONUS(beta, riskData.liquidationBonus);
     }
-
 
     // LTV  = e ^ (-c * sigma / sqrt(l/d)) - beta
     // with c = confidence level factor

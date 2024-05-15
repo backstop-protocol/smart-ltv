@@ -31,12 +31,37 @@ contract IntegrationTestSmartWithdraw is Test {
     pythia = new Pythia();
     smartLTV = new SmartLTV(pythia, trustedRelayerAddress);
     smartWithdraw = new SmartWithdraw(address(smartLTV));
-    ETH_VAULT_OWNER = IMetaMorpho(ETH_VAULT).owner(); 
+    ETH_VAULT_OWNER = IMetaMorpho(ETH_VAULT).owner();
     vm.startPrank(ETH_VAULT_OWNER);
     IMetaMorpho(ETH_VAULT).setIsAllocator(allocator, true);
     IMetaMorpho(ETH_VAULT).setIsAllocator(address(smartWithdraw), true);
     vm.stopPrank();
+  }
 
+  function testCheckMarketEthVault() public {
+    SmartWithdraw smartWithdrawProd = SmartWithdraw(0xCf48A240FB83861e729C65A5234598A16d045d99);
+    SignedRiskData memory signedRiskData = SignedRiskData({
+      riskData: RiskData({
+        collateralAsset: 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0,
+        debtAsset: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,
+        liquidity: 31077977373809277000000,
+        volatility: 55280587205341895,
+        liquidationBonus: 15000000000000000,
+        lastUpdate: 1715781245,
+        chainId: 1
+      }),
+      v: 28,
+      r: 0xa7ba75d40041b027d8e4da5df64032b6c2c8fb255f6adbf505372f048fee360a,
+      s: 0x2ab0789899029a58d357a8c87f27f9e02e7c8b4005e50407bab116bb0953ccff
+    });
+
+    (bool shouldWithdraw, uint256 recommendedLTV) = smartWithdrawProd.keeperCheck(
+      ETH_VAULT,
+      wstETH_945_MarketIndex,
+      signedRiskData
+    );
+    assertFalse(shouldWithdraw);
+    console.log("recommended ltv %s", TestUtils.toPercentageString(recommendedLTV));
   }
 
   // this test should fail because the minimum risk level is not set for the vault
@@ -59,11 +84,7 @@ contract IntegrationTestSmartWithdraw is Test {
     SignedRiskData memory signedRiskData = SignedRiskData({riskData: data, v: v, r: r, s: s});
 
     vm.expectRevert();
-    smartWithdraw.keeperCheck(
-      ETH_VAULT,
-      wstETH_945_MarketIndex,
-      signedRiskData
-    );
+    smartWithdraw.keeperCheck(ETH_VAULT, wstETH_945_MarketIndex, signedRiskData);
     // assertFalse(shouldWithdraw);
     // console.log("recommended ltv %s", TestUtils.toPercentageString(recommendedLTV));
   }

@@ -45,7 +45,7 @@ contract SmartWithdraw {
     require(IMetaMorpho(vaultAddress).isAllocator(msg.sender), "SmartWithdraw: msg.sender is not vault allocator");
     VaultMaxRiskLevel[vaultAddress] = newMaxRiskLevel;
   }
-  
+
   /// @notice Sets the minimum liquidity to withdraw from a market.
   /// @param vaultAddress The address of the vault for which to set the minimum liquidity to withdraw.
   /// @param newMinLiquidity The new minimum liquidity to withdraw.
@@ -65,10 +65,10 @@ contract SmartWithdraw {
     uint256 marketIndex,
     SignedRiskData memory signedRiskData
   ) public view returns (bool, uint256) {
-    if(!_checkEnoughLiquidity(vaultAddress, marketIndex)) {
+    if (!_checkEnoughLiquidity(vaultAddress, marketIndex)) {
       return (false, 0);
     }
-    
+
     (MarketParams memory marketParams, uint256 cap) = _getRequiredParameters(vaultAddress, marketIndex);
 
     uint256 recommendedLTV = SMART_LTV.ltv(
@@ -158,7 +158,11 @@ contract SmartWithdraw {
     MarketParams memory idleMarket = _getIdleMarket(vault);
     MarketAllocation[] memory allocations = new MarketAllocation[](2);
 
-    (uint256 supplyAssets, uint256 availableLiquidity) = _calculateSupplyAssetsAndLiquidity(morpho, address(vault), marketToWithdraw);
+    (uint256 supplyAssets, uint256 availableLiquidity) = _calculateSupplyAssetsAndLiquidity(
+      morpho,
+      address(vault),
+      marketToWithdraw
+    );
 
     // withdraw max from market to withdraw
     allocations[0] = MarketAllocation({
@@ -178,9 +182,15 @@ contract SmartWithdraw {
   /// @param marketParams The market parameters from which the supply assets and available liquidity are to be calculated.
   /// @return supplyAssets The supply assets of the market.
   /// @return availableLiquidity The available liquidity of the market.
-  function _calculateSupplyAssetsAndLiquidity(IMorpho morpho, address vaultAddress, MarketParams memory marketParams) internal view returns (uint256 supplyAssets, uint256 availableLiquidity) {
+  function _calculateSupplyAssetsAndLiquidity(
+    IMorpho morpho,
+    address vaultAddress,
+    MarketParams memory marketParams
+  ) internal view returns (uint256 supplyAssets, uint256 availableLiquidity) {
     uint256 supplyShares = morpho.supplyShares(marketParams.id(), vaultAddress);
-    (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, ) = morpho.expectedMarketBalances(marketParams);
+    (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, ) = morpho.expectedMarketBalances(
+      marketParams
+    );
     supplyAssets = supplyShares.toAssetsDown(totalSupplyAssets, totalSupplyShares);
     availableLiquidity = totalSupplyAssets - totalBorrowAssets;
   }

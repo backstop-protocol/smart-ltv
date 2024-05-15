@@ -54,7 +54,8 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     const smartWithdrawInterface = new Interface(smartWithdrawABI);
     for (const market of parameters.markets) {
         // get risk data from github
-        // ex url: https://raw.githubusercontent.com/LaTribuWeb3/risk-data-repo/main/mainnet/latest/WETH_wstETH
+        // ex url: https://raw.githubusercontent.com/LaTribuWeb3/risk-data-repo/main/mainnet/latest/wstETH_WETH_in_quote 
+        // >> using in_quote version to have the wstETH liquidity in WETH
         const riskDataForMarket = `https://raw.githubusercontent.com/LaTribuWeb3/risk-data-repo/main/mainnet/latest/${market.base}_${market.quote}_in_quote`;
         const ghData: GithubRawData[] = await ky.get(riskDataForMarket).json();
         const selectedData = ghData.find(_ => _.liquidationBonus == market.liquidationBonus);
@@ -62,7 +63,6 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
             console.warn(`Cannot find risk data for ${market.base}/${market.quote} and liquidation bonus ${market.liquidationBonus}`);
             continue;
         }
-        console.log(`${market.index} ${market.base} ${market.quote}:`, selectedData);
 
         const signedRiskData: SignedRiskData = {
             riskData: selectedData.riskData,
@@ -70,10 +70,11 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
             r: selectedData.r,
             s: selectedData.s,
         }
+        // console.log(`${market.index} ${market.base} ${market.quote}:`, signedRiskData);
 
         const keeperCheckResponse = await contract.keeperCheck(parameters.vaultAddress, market.index, signedRiskData);
 
-        console.log(`${market.index} ${market.base} ${market.quote}:`, keeperCheckResponse);
+        console.log(`${market.index} ${market.base} ${market.quote}: withdraw needed: ${keeperCheckResponse[0]}. recommended ltv ${keeperCheckResponse[1] / 1e16}%`);
         if (keeperCheckResponse[0]) {
             canExec = true;
             callData.push({
@@ -82,7 +83,6 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
             });
         }
     }
-
 
     return { canExec: canExec, callData, message: `Nothing to execute` };
 });
