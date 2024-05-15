@@ -15,11 +15,18 @@ contract PythiaTest is Test {
     address verifyingContract;
   }
 
+  bytes constant PYTHIA_CODE = type(Pythia).creationCode;
+  event DEPLOYMENT_CODE(bytes code);
+
   Pythia pythia;
 
   /// @notice Set up the testing environment
   function setUp() public {
     pythia = new Pythia();
+  }
+
+  function testLogPythiaCreationCode() public {
+    emit DEPLOYMENT_CODE(PYTHIA_CODE);
   }
 
   /// @notice Test to verify the DOMAIN_SEPARATOR is correctly set in the Pythia contract

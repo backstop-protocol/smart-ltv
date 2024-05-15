@@ -32,6 +32,17 @@ contract SmartLTVTest is Test {
     vm.roll(16848497);
   }
 
+  event DEPLOYMENT_CODE(bytes code);
+
+  function testLogSmartLTVCreationCode() public {
+    // https://book.getfoundry.sh/cheatcodes/get-code
+    address trustedRelayerProd = 0x9dAb6F06A8FEab98076BADF999Eb24f0E78A0F7D;
+    address pythiaProd = 0x6D5aa71Fb1D1384dF675667507d2fd2604fdF894;
+    bytes memory args = abi.encode(Pythia(pythiaProd), trustedRelayerProd);
+    bytes memory bytecode = abi.encodePacked(vm.getCode("SmartLTV.sol:SmartLTV"), args);
+    emit DEPLOYMENT_CODE(bytecode);
+  }
+
   function computeLtv(
     uint256 liquidity,
     uint256 volatility,
