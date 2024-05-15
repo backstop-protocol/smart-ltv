@@ -26,6 +26,13 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
         .div(BigNumber.from(10 ** 9))
         .toString()} GWei | Enabled: ${parameters.enabled}. Markets: ${parameters.markets.length}`)
 
+    if (!parameters.enabled) {
+        return {
+            canExec: false,
+            message: `Bot not enabled`,
+        };
+    }
+    
     if (
         context.gelatoArgs.gasPrice.gt(BigNumber.from(parameters.maxGasPriceWei))
     ) {
@@ -59,7 +66,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
         const riskDataForMarket = `https://raw.githubusercontent.com/LaTribuWeb3/risk-data-repo/main/mainnet/latest/${market.base}_${market.quote}_in_quote`;
         const ghData: GithubRawData[] = await ky.get(riskDataForMarket).json();
         const selectedData = ghData.find(_ => _.liquidationBonus == market.liquidationBonus);
-        if(!selectedData) {
+        if (!selectedData) {
             console.warn(`Cannot find risk data for ${market.base}/${market.quote} and liquidation bonus ${market.liquidationBonus}`);
             continue;
         }
@@ -84,7 +91,18 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
         }
     }
 
-    return { canExec: canExec, callData, message: `Nothing to execute` };
+    if (canExec) {
+        return {
+            canExec: true,
+            callData: callData,
+            message: `Execution ready`
+        };
+    } else {
+        return {
+            canExec: false, // Explicitly type as false
+            message: `Nothing to execute`
+        };
+    }
 });
 
 function validateParameters(parameters: SmartWithdrawParameters) {
