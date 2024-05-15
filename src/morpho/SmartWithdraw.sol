@@ -26,7 +26,13 @@ contract SmartWithdraw {
 
   SmartLTV public immutable SMART_LTV;
 
+  /// @notice The maximum risk level for a specific vault.
   mapping(address => uint256) public VaultMaxRiskLevel;
+
+  /// @notice The minimum liquidity to withdraw from a market.
+  /// @dev if the available liquidity is less than the minimum liquidity to withdraw, the withdrawal should not be performed, even if the risk is too high
+  /// @dev default to 0 if not set
+  mapping(address => uint256) public VaultMinLiquidityToWithdraw;
 
   constructor(address smartLTV) {
     SMART_LTV = SmartLTV(smartLTV);
@@ -38,6 +44,14 @@ contract SmartWithdraw {
   function setVaultMaxRiskLevel(address vaultAddress, uint256 newMaxRiskLevel) public {
     require(IMetaMorpho(vaultAddress).isAllocator(msg.sender), "SmartWithdraw: msg.sender is not vault allocator");
     VaultMaxRiskLevel[vaultAddress] = newMaxRiskLevel;
+  }
+  
+  /// @notice Sets the minimum liquidity to withdraw from a market.
+  /// @param vaultAddress The address of the vault for which to set the minimum liquidity to withdraw.
+  /// @param newMinLiquidity The new minimum liquidity to withdraw.
+  function setVaultMinLiquidityToWithdraw(address vaultAddress, uint256 newMinLiquidity) public {
+    require(IMetaMorpho(vaultAddress).isAllocator(msg.sender), "SmartWithdraw: msg.sender is not vault allocator");
+    VaultMinLiquidityToWithdraw[vaultAddress] = newMinLiquidity;
   }
 
   /// @notice Checks if the recommended Loan-to-Value (LTV) is below the market's liquidation LTV threshold.
@@ -51,6 +65,10 @@ contract SmartWithdraw {
     uint256 marketIndex,
     SignedRiskData memory signedRiskData
   ) public view returns (bool, uint256) {
+    if(!_checkEnoughLiquidity(vaultAddress, marketIndex)) {
+      return (false, 0);
+    }
+    
     (MarketParams memory marketParams, uint256 cap) = _getRequiredParameters(vaultAddress, marketIndex);
 
     uint256 recommendedLTV = SMART_LTV.ltv(
@@ -67,6 +85,17 @@ contract SmartWithdraw {
 
     // if the recommended LTV is below the market's liquidation LTV, all available liquidity should be withdrawn
     return (recommendedLTV < marketParams.lltv, recommendedLTV);
+  }
+
+  function _checkEnoughLiquidity(address vaultAddress, uint256 marketIndex) internal view returns (bool) {
+    IMetaMorpho vault = IMetaMorpho(vaultAddress);
+    IMorpho morpho = vault.MORPHO();
+    Id marketId = vault.withdrawQueue(marketIndex);
+    MarketParams memory marketParams = morpho.idToMarketParams(marketId);
+    (, uint256 availableLiquidity) = _calculateSupplyAssetsAndLiquidity(morpho, vaultAddress, marketParams);
+
+    // if the available liquidity is less than the minimum liquidity to withdraw, the withdrawal should not be performed
+    return availableLiquidity >= VaultMinLiquidityToWithdraw[vaultAddress];
   }
 
   function _getRequiredParameters(
@@ -128,14 +157,8 @@ contract SmartWithdraw {
   function _withdrawAllFromMarket(IMetaMorpho vault, IMorpho morpho, MarketParams memory marketToWithdraw) internal {
     MarketParams memory idleMarket = _getIdleMarket(vault);
     MarketAllocation[] memory allocations = new MarketAllocation[](2);
-    (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, ) = morpho.expectedMarketBalances(
-      marketToWithdraw
-    );
 
-    uint256 supplyShares = morpho.supplyShares(marketToWithdraw.id(), address(vault));
-    uint256 supplyAssets = supplyShares.toAssetsDown(totalSupplyAssets, totalSupplyShares);
-
-    uint256 availableLiquidity = totalSupplyAssets - totalBorrowAssets;
+    (uint256 supplyAssets, uint256 availableLiquidity) = _calculateSupplyAssetsAndLiquidity(morpho, address(vault), marketToWithdraw);
 
     // withdraw max from market to withdraw
     allocations[0] = MarketAllocation({
@@ -147,6 +170,19 @@ contract SmartWithdraw {
     allocations[1] = MarketAllocation({marketParams: idleMarket, assets: type(uint256).max});
 
     vault.reallocate(allocations);
+  }
+
+  /// @notice Calculates the supply assets and available liquidity for a market.
+  /// @param morpho The Morpho contract used to interact with the market.
+  /// @param vaultAddress The address of the vault where the market is located.
+  /// @param marketParams The market parameters from which the supply assets and available liquidity are to be calculated.
+  /// @return supplyAssets The supply assets of the market.
+  /// @return availableLiquidity The available liquidity of the market.
+  function _calculateSupplyAssetsAndLiquidity(IMorpho morpho, address vaultAddress, MarketParams memory marketParams) internal view returns (uint256 supplyAssets, uint256 availableLiquidity) {
+    uint256 supplyShares = morpho.supplyShares(marketParams.id(), vaultAddress);
+    (uint256 totalSupplyAssets, uint256 totalSupplyShares, uint256 totalBorrowAssets, ) = morpho.expectedMarketBalances(marketParams);
+    supplyAssets = supplyShares.toAssetsDown(totalSupplyAssets, totalSupplyShares);
+    availableLiquidity = totalSupplyAssets - totalBorrowAssets;
   }
 
   /// @notice Finds the idle market in the vault.
