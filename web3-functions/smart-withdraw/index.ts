@@ -43,17 +43,6 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
         };
     }
 
-    /*
-    return {
-              canExec: true,
-              callData: [
-                {
-                  to: safeAddress,
-                  data: encoded,
-                },
-              ],
-            }; */
-
     const callData: { to: string, data: string }[] = [];
     let canExec = false;
 

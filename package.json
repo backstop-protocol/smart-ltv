@@ -8,6 +8,7 @@
   },
   "scripts": {
     "debug:smart-withdraw": "npx hardhat w3f-run smart-withdraw --logs --network ethereum",
+    "publish:smart-withdraw": "npx hardhat w3f-deploy smart-withdraw",
     "debug:gelato-target-allocator": "npx hardhat w3f-run target-allocator --logs --network ethereum",
     "publish:gelato-target-allocator": "npx hardhat w3f-deploy target-allocator",
     "debug:multisig-executor": "npx hardhat w3f-run multisig-executor --logs --network polygon",
