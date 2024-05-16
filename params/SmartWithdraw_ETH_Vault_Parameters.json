@@ -9,6 +9,30 @@
             "base": "wstETH",
             "quote": "WETH",
             "liquidationBonus": 150
+        },
+        {
+            "index": 2,
+            "base": "rETH",
+            "quote": "WETH",
+            "liquidationBonus": 150
+        },
+        {
+            "index": 3,
+            "base": "sDAI",
+            "quote": "WETH",
+            "liquidationBonus": 400
+        },
+        {
+            "index": 4,
+            "base": "WBTC",
+            "quote": "WETH",
+            "liquidationBonus": 250
+        },
+        {
+            "index": 5,
+            "base": "wstETH",
+            "quote": "WETH",
+            "liquidationBonus": 150
         }
     ]
 }
