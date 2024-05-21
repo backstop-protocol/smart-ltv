@@ -29,13 +29,15 @@ library TestUtils {
     bytes32 riskdataTypehash,
     bytes32 domainSeparator,
     uint256 liquidity,
-    uint256 volatility
+    uint256 volatility,
+    uint256 liquidationBonus
   ) internal view returns (RiskData memory data, uint8 v, bytes32 r, bytes32 s) {
     data = RiskData({
       collateralAsset: collateralAddress,
       debtAsset: debtAddress,
       liquidity: liquidity,
       volatility: volatility,
+      liquidationBonus: liquidationBonus,
       lastUpdate: block.timestamp - 3600, // 1 hour old data
       chainId: block.chainid
     });
@@ -48,6 +50,7 @@ library TestUtils {
         data.debtAsset,
         data.liquidity,
         data.volatility,
+        data.liquidationBonus,
         data.lastUpdate,
         data.chainId
       )

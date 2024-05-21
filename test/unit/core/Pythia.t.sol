@@ -15,11 +15,18 @@ contract PythiaTest is Test {
     address verifyingContract;
   }
 
+  bytes constant PYTHIA_CODE = type(Pythia).creationCode;
+  event DEPLOYMENT_CODE(bytes code);
+
   Pythia pythia;
 
   /// @notice Set up the testing environment
   function setUp() public {
     pythia = new Pythia();
+  }
+
+  function testLogPythiaCreationCode() public {
+    emit DEPLOYMENT_CODE(PYTHIA_CODE);
   }
 
   /// @notice Test to verify the DOMAIN_SEPARATOR is correctly set in the Pythia contract
@@ -57,6 +64,7 @@ contract PythiaTest is Test {
     address debtAsset,
     uint256 liquidity,
     uint256 volatility,
+    uint256 liquidationBonus,
     uint256 lastUpdate,
     uint256 chainId
   ) public {
@@ -65,6 +73,7 @@ contract PythiaTest is Test {
       debtAsset: debtAsset,
       liquidity: liquidity,
       volatility: volatility,
+      liquidationBonus: liquidationBonus,
       lastUpdate: lastUpdate,
       chainId: chainId
     });
@@ -76,6 +85,7 @@ contract PythiaTest is Test {
         data.debtAsset,
         data.liquidity,
         data.volatility,
+        data.liquidationBonus,
         data.lastUpdate,
         data.chainId
       )
@@ -98,6 +108,7 @@ contract PythiaTest is Test {
     address debtAsset,
     uint256 liquidity,
     uint256 volatility,
+    uint256 liquidationBonus,
     uint256 lastUpdate,
     uint256 chainId
   ) public {
@@ -109,6 +120,7 @@ contract PythiaTest is Test {
       debtAsset: debtAsset,
       liquidity: liquidity,
       volatility: volatility,
+      liquidationBonus: liquidationBonus,
       lastUpdate: lastUpdate,
       chainId: chainId
     });
@@ -121,6 +133,7 @@ contract PythiaTest is Test {
         data.debtAsset,
         data.liquidity,
         data.volatility,
+        data.liquidationBonus,
         data.lastUpdate,
         data.chainId
       )

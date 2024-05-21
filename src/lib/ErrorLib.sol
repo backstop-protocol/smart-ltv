@@ -44,4 +44,9 @@ library ErrorLib {
   /// @param ltv The current LTV.
   /// @param maxLtv The maximum allowed LTV.
   error LTV_TOO_HIGH(uint256 ltv, uint256 maxLtv);
+
+  /// @notice Error for when the liquidation bonus is too high.
+  /// @param beta The current liquidation bonus.
+  /// @param liquidationBonus The liquidation bonus in the risk data.
+  error WRONG_LIQUIDATION_BONUS(uint256 beta, uint256 liquidationBonus);
 }

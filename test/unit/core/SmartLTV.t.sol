@@ -32,6 +32,17 @@ contract SmartLTVTest is Test {
     vm.roll(16848497);
   }
 
+  event DEPLOYMENT_CODE(bytes code);
+
+  function testLogSmartLTVCreationCode() public {
+    // https://book.getfoundry.sh/cheatcodes/get-code
+    address trustedRelayerProd = 0x9dAb6F06A8FEab98076BADF999Eb24f0E78A0F7D;
+    address pythiaProd = 0x6D5aa71Fb1D1384dF675667507d2fd2604fdF894;
+    bytes memory args = abi.encode(Pythia(pythiaProd), trustedRelayerProd);
+    bytes memory bytecode = abi.encodePacked(vm.getCode("SmartLTV.sol:SmartLTV"), args);
+    emit DEPLOYMENT_CODE(bytecode);
+  }
+
   function computeLtv(
     uint256 liquidity,
     uint256 volatility,
@@ -82,6 +93,7 @@ contract SmartLTVTest is Test {
     address debtAsset,
     uint256 liquidity,
     uint256 volatility,
+    uint256 liquidationBonus,
     uint256 lastUpdate,
     uint256 chainId
   ) public {
@@ -90,6 +102,7 @@ contract SmartLTVTest is Test {
       debtAsset: debtAsset,
       liquidity: liquidity,
       volatility: volatility,
+      liquidationBonus: liquidationBonus,
       lastUpdate: lastUpdate,
       chainId: chainId
     });
@@ -102,6 +115,7 @@ contract SmartLTVTest is Test {
         data.debtAsset,
         data.liquidity,
         data.volatility,
+        data.liquidationBonus,
         data.lastUpdate,
         data.chainId
       )
@@ -140,6 +154,7 @@ contract SmartLTVTest is Test {
     address debtAsset,
     uint256 liquidity,
     uint256 volatility,
+    uint256 liquidationBonus,
     uint256 chainId
   ) public {
     RiskData memory data = RiskData({
@@ -147,6 +162,7 @@ contract SmartLTVTest is Test {
       debtAsset: debtAsset,
       liquidity: liquidity,
       volatility: volatility,
+      liquidationBonus: liquidationBonus,
       lastUpdate: block.timestamp - 10 days, // last update 10 days old
       chainId: chainId
     });
@@ -159,6 +175,7 @@ contract SmartLTVTest is Test {
         data.debtAsset,
         data.liquidity,
         data.volatility,
+        data.liquidationBonus,
         data.lastUpdate,
         data.chainId
       )
@@ -202,6 +219,7 @@ contract SmartLTVTest is Test {
       debtAsset: debtAsset,
       liquidity: liquidity,
       volatility: volatility,
+      liquidationBonus: 0.005e18, // 0.5% liquidation bonus
       lastUpdate: block.timestamp - 3600, // 1 hour old data
       chainId: bound(chainIdSeed, block.chainid + 1, 1e20) // different chainid than the current one
     });
@@ -214,6 +232,7 @@ contract SmartLTVTest is Test {
         data.debtAsset,
         data.liquidity,
         data.volatility,
+        data.liquidationBonus,
         data.lastUpdate,
         data.chainId
       )
@@ -249,6 +268,7 @@ contract SmartLTVTest is Test {
       debtAsset: debtAsset,
       liquidity: liquidity,
       volatility: volatility,
+      liquidationBonus: 0.005e18, // 0.5% liquidation bonus
       lastUpdate: block.timestamp - 3600, // 1 hour old data
       chainId: block.chainid
     });
@@ -261,6 +281,7 @@ contract SmartLTVTest is Test {
         data.debtAsset,
         data.liquidity,
         data.volatility,
+        data.liquidationBonus,
         data.lastUpdate,
         data.chainId
       )
@@ -296,6 +317,7 @@ contract SmartLTVTest is Test {
       debtAsset: address(25),
       liquidity: liquidity,
       volatility: volatility,
+      liquidationBonus: 0.005e18, // 0.5% liquidation bonus
       lastUpdate: block.timestamp - 3600, // 1 hour old data
       chainId: block.chainid
     });
@@ -308,6 +330,7 @@ contract SmartLTVTest is Test {
         data.debtAsset,
         data.liquidity,
         data.volatility,
+        data.liquidationBonus,
         data.lastUpdate,
         data.chainId
       )
@@ -363,7 +386,8 @@ contract SmartLTVTest is Test {
       pythia.RISKDATA_TYPEHASH(),
       pythia.DOMAIN_SEPARATOR(),
       liquidity,
-      volatility
+      volatility,
+      liquidationBonus
     );
     // Call the ltv function
     uint256 ltv = smartLTV.ltv(
@@ -397,7 +421,8 @@ contract SmartLTVTest is Test {
       pythia.RISKDATA_TYPEHASH(),
       pythia.DOMAIN_SEPARATOR(),
       liquidity,
-      volatility
+      volatility,
+      liquidationBonus
     );
     // Call the ltv function
     uint256 ltv = smartLTV.ltv(
@@ -433,7 +458,8 @@ contract SmartLTVTest is Test {
       pythia.RISKDATA_TYPEHASH(),
       pythia.DOMAIN_SEPARATOR(),
       liquidity,
-      volatility
+      volatility,
+      liquidationBonus
     );
     // Call the ltv function
     uint256 ltv = smartLTV.ltv(

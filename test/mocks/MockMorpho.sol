@@ -6,7 +6,12 @@ import "../../lib/metamorpho/lib/morpho-blue/src/interfaces/IMorpho.sol";
 contract MockMorpho is IMorpho {
   // Mock state variables
   mapping(Id => Market) public marketInfos;
+  mapping(Id => MarketParams) public marketParams;
   mapping(Id => mapping(address => Position)) public positionInfos;
+
+  function setMarketParams(Id marketId, MarketParams memory _marketParams) external {
+    marketParams[marketId] = _marketParams;
+  }
 
   // Setters for mock data
   function setMarketInfo(Id marketId, Market memory marketInfo) external {
@@ -25,8 +30,8 @@ contract MockMorpho is IMorpho {
     return marketInfos[id];
   }
 
-  function idToMarketParams(Id) external pure override returns (MarketParams memory) {
-    return MarketParams(address(0), address(0), address(0), address(0), 0); // Placeholder value
+  function idToMarketParams(Id marketId) external view override returns (MarketParams memory) {
+    return marketParams[marketId];
   }
 
   function DOMAIN_SEPARATOR() external pure override returns (bytes32) {

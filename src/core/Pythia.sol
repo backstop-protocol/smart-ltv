@@ -23,7 +23,7 @@ contract Pythia {
   /// @notice Type hash for RiskData, used in the EIP712 typed data signing process.
   bytes32 public constant RISKDATA_TYPEHASH =
     keccak256(
-      "RiskData(address collateralAsset,address debtAsset,uint256 liquidity,uint256 volatility,uint256 lastUpdate,uint256 chainId)"
+      "RiskData(address collateralAsset,address debtAsset,uint256 liquidity,uint256 volatility,uint256 liquidationBonus,uint256 lastUpdate,uint256 chainId)"
     );
 
   /// @notice Immutable EIP712 domain separator, unique to this contract and its deployment environment.
@@ -65,6 +65,7 @@ contract Pythia {
           data.debtAsset,
           data.liquidity,
           data.volatility,
+          data.liquidationBonus,
           data.lastUpdate,
           data.chainId
         )

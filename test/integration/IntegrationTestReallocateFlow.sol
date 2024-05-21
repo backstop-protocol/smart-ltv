@@ -133,6 +133,7 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
       debtAsset: address(2), // Example address
       liquidity: 1000, // Example value
       volatility: 500, // Example value
+      liquidationBonus: 100, // Example value
       lastUpdate: block.timestamp, // Current block timestamp
       chainId: block.chainid // Current chain ID
     });
@@ -149,7 +150,8 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
       pythia.RISKDATA_TYPEHASH(),
       pythia.DOMAIN_SEPARATOR(),
       liquidity,
-      volatility
+      volatility,
+      0.005e18 // 0.5% liquidation bonus
     );
 
     riskDatas[1] = data;
@@ -221,6 +223,7 @@ contract IntegrationTestReallocateFlow is MorphoFixture {
       debtAsset: address(2), // Example address
       liquidity: 1000, // Example value
       volatility: 500, // Example value
+      liquidationBonus: 100, // Example value
       lastUpdate: block.timestamp, // Current block timestamp
       chainId: block.chainid // Current chain ID
     });
