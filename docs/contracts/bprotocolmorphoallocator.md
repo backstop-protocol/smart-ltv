@@ -18,6 +18,7 @@
 ## Constructor
 
 Initializes the contract with references to SmartLTV contract and MetaMorpho Vault.
+And also sets the initial owner and the MIN_CLF based on a risk level.
 
 ## Functions
 
