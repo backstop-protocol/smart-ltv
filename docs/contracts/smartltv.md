@@ -17,7 +17,7 @@
 
 - `PYTHIA`: Address of the Pythia contract used for risk data verification.
 - `TRUSTED_RELAYER`: Address of the trusted relayer for verifying data authenticity.
-- `MIN_CLF`: Minimum collateralization liquidation factor.
+- `MIN_CLF`: The minimum confidence level factor.
   
 ## Constructor
 
