@@ -70,7 +70,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
         const keeperCheckResponse = await contract.keeperCheck(parameters.vaultAddress, market.index, signedRiskData);
 
-        console.log(`${market.index} ${market.base} ${market.quote}: withdraw needed: ${keeperCheckResponse[0]}. recommended ltv ${keeperCheckResponse[1] / 1e16}%`);
+        console.log(`[MARKET ${market.index}] | [${market.base}/${market.quote}] withdraw needed: ${keeperCheckResponse[0]}. Recommended ltv ${keeperCheckResponse[1] / 1e16}%`);
         if (keeperCheckResponse[0]) {
             canExec = true;
             callData.push({
