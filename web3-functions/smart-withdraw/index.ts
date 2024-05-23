@@ -52,7 +52,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
         // get risk data from github
         // ex url: https://raw.githubusercontent.com/LaTribuWeb3/risk-data-repo/main/mainnet/latest/wstETH_WETH_in_quote 
         // >> using in_quote version to have the wstETH liquidity in WETH
-        const riskDataForMarket = `https://raw.githubusercontent.com/LaTribuWeb3/risk-data-repo/main/mainnet/latest/${market.base}_${market.quote}_in_quote`;
+        const riskDataForMarket = `${parameters.riskDataBasePath}/${market.base}_${market.quote}_in_quote`;
         const ghData: GithubRawData[] = await ky.get(riskDataForMarket).json();
         const selectedData = ghData.find(_ => _.liquidationBonus == market.liquidationBonus);
         if (!selectedData) {

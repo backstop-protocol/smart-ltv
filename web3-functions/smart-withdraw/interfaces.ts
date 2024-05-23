@@ -3,6 +3,7 @@ export interface SmartWithdrawParameters {
     enabled: boolean; // Whether the smart withdraw feature is enabled
     smartWithdrawContract: string; // The address of the smart withdraw contract
     vaultAddress: string; // The address of the vault
+    riskDataBasePath: string; // The base path of the risk data to get
     markets: SmartWithdrawMarketParameters[]; // The list of markets to work on
 }
 
