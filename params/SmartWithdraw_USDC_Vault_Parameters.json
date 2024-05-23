@@ -2,37 +2,37 @@
     "maxGasPriceWei": "65000000000",
     "enabled": true,
     "smartWithdrawContract": "0xCf48A240FB83861e729C65A5234598A16d045d99",
-    "vaultAddress": "0x38989BBA00BDF8181F4082995b3DEAe96163aC5D",
+    "vaultAddress": "0x186514400e52270cef3D80e1c6F8d10A75d47344",,
     "riskDataBasePath": "https://github.com/Risk-DAO/simulation-results/tree/main/risk-data/mainnet/latest",
     "markets": [
         {
-            "index": 1,
+            "index": 0,
             "base": "wstETH",
-            "quote": "WETH",
-            "liquidationBonus": 150
+            "quote": "USDC",
+            "liquidationBonus": 400
         },
         {
             "index": 2,
-            "base": "rETH",
-            "quote": "WETH",
-            "liquidationBonus": 150
+            "base": "WBTC",
+            "quote": "USDC",
+            "liquidationBonus": 400
         },
         {
             "index": 3,
-            "base": "sDAI",
-            "quote": "WETH",
+            "base": "WETH",
+            "quote": "USDC",
             "liquidationBonus": 400
         },
         {
             "index": 4,
-            "base": "WBTC",
-            "quote": "WETH",
+            "base": "WETH",
+            "quote": "USDC",
             "liquidationBonus": 250
         },
         {
             "index": 5,
-            "base": "wstETH",
-            "quote": "WETH",
+            "base": "sDAI",
+            "quote": "USDC",
             "liquidationBonus": 150
         }
     ]
