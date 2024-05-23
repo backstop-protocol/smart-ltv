@@ -110,4 +110,8 @@ function validateParameters(parameters: SmartWithdrawParameters) {
     if (!parameters.vaultAddress || parameters.vaultAddress == ethers.constants.AddressZero) {
         throw new Error(`vaultAddress param must not be address zero or empty`);
     }
+
+    if (!parameters.riskDataBasePath) {
+        throw new Error(`riskDataBasePath param must not be empty`);
+    }
 }
