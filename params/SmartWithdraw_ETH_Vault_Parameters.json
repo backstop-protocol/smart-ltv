@@ -3,7 +3,7 @@
     "enabled": true,
     "smartWithdrawContract": "0xCf48A240FB83861e729C65A5234598A16d045d99",
     "vaultAddress": "0x38989BBA00BDF8181F4082995b3DEAe96163aC5D",
-    "riskDataBasePath": "https://raw.githubusercontent.com/Risk-DAO/simulation-results/main/risk-data/mainnet/latest/",
+    "riskDataBasePath": "https://raw.githubusercontent.com/Risk-DAO/simulation-results/main/risk-data/mainnet/latest",
     "markets": [
         {
             "index": 1,
