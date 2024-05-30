@@ -50,7 +50,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     const smartWithdrawInterface = new Interface(smartWithdrawABI);
     for (const market of parameters.markets) {
         // get risk data from github
-        // ex url: https://raw.githubusercontent.com/LaTribuWeb3/risk-data-repo/main/mainnet/latest/wstETH_WETH_in_quote 
+        // ex url: https://raw.githubusercontent.com/Risk-DAO/simulation-results/main/risk-data/mainnet/latest/wstETH_WETH_in_quote
         // >> using in_quote version to have the wstETH liquidity in WETH
         const riskDataForMarket = `${parameters.riskDataBasePath}/${market.base}_${market.quote}_in_quote`;
         const ghData: GithubRawData[] = await ky.get(riskDataForMarket).json();
