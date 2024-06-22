@@ -154,4 +154,16 @@ contract IntegrationTestEmergencyWithdrawal is Test {
     emergencyContract.withdrawUSDC();
     displayMarketStatus("AFTER", USDC_VAULT);
   }
+
+  function testEmergencyWithdrawETHSupplyQueue() public {
+    vm.prank(allocator);
+    emergencyContract.withdrawETH();
+    assertEq(ETH_VAULT.supplyQueueLength(), 0);
+  }
+
+  function testEmergencyWithdrawUSDCSupplyQueue() public {
+    vm.prank(allocator);
+    emergencyContract.withdrawUSDC();
+    assertEq(USDC_VAULT.supplyQueueLength(), 0);
+  }
 }
