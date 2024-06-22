@@ -11,10 +11,12 @@ import {MorphoLib} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/peri
 import {UtilsLib} from "../../lib/metamorpho/lib/morpho-blue/src/libraries/UtilsLib.sol";
 
 /// @title Emergency Withdrawal Contract
+/// @author B.Protocol with a fix from Allez Labs to address attack edge case
 /// @notice This contract allows for the withdrawal of assets from all non-idle markets to the idle market in case of an emergency.
 /// It uses various libraries from the MetaMorpho protocol for interacting with the vaults and computing correct values
 /// Can only be called by a vault allocator to withdraw the maximum amount from all non-idle markets
 /// @dev this contract must have the allocator role on the vaults
+/// Note from Allez Labs: Adding a fix to the emergency withdrawal contract to address an edge case attack vector.
 contract EmergencyWithdrawal {
   using MorphoBalancesLib for IMorpho;
   using MarketParamsLib for MarketParams;
@@ -88,5 +90,8 @@ contract EmergencyWithdrawal {
     // allocations should always be: 1 allocation per non-idle market (should all be withdraws)
     // and exactly 1 allocation to the idle market with uint.max as the target supply
     vault.reallocate(allocations);
+
+    // Allez Labs: Setting the supply queue so there are no more supplies possible.
+    vault.setSupplyQueue(new Id[](0));
   }
 }
