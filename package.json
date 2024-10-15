@@ -15,6 +15,7 @@
     "publish:multisig-executor": "npx hardhat w3f-deploy multisig-executor",
     "test-unit": "forge test --match-path ./test/unit/**.sol",
     "test-integration": "forge test --match-path './test/integration/**' --fork-url $GOERLI_RPC_URL -vvv",
+    "test-integration-emergency-withdrawal-updated": "forge test --match-path './test/integration/IntegrationTestEmergencyWithdrawal.sol' --fork-url $GOERLI_RPC_URL -vvv",
     "coverage": "forge coverage --match-path './test/unit/**' --report summary --report lcov",
     "build": "forge build",
     "prettier-format": "prettier --config .prettierrc \"./(src|test|scripts)/**/*.sol\" --write",
